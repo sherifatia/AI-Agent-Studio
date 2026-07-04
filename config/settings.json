@@ -1,0 +1,7 @@
+{
+    "theme": "dark",
+    "provider": "ollama",
+    "model": "llama3",
+    "language": "ar",
+    "startup_page": "Dashboard"
+}

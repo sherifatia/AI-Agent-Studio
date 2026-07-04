@@ -1,6 +1,12 @@
+"""One-off scaffolder that ensures the project's folder structure exists.
+
+Not part of the application runtime — run manually (`python bootstrap.py`)
+after cloning if any package folders or __init__.py files are missing.
+"""
+
 from pathlib import Path
 
-PROJECT_STRUCTURE = [
+PROJECT_STRUCTURE: list[str] = [
     "core",
     "ui",
     "providers",
@@ -14,7 +20,7 @@ PROJECT_STRUCTURE = [
     "logs",
 ]
 
-INIT_PACKAGES = [
+INIT_PACKAGES: list[str] = [
     "core",
     "ui",
     "providers",
@@ -27,7 +33,8 @@ INIT_PACKAGES = [
 ]
 
 
-def create_project():
+def create_project() -> None:
+    """Create any missing package folders and their `__init__.py` files."""
     root = Path(__file__).parent
 
     print("\n===================================")

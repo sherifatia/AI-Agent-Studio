@@ -1,0 +1,11 @@
+# Auto-derived from actual `import` statements found in the codebase.
+# No packages were guessed or added speculatively — see docs/PROJECT_AUDIT.md
+# section 6 for the exact import-to-file mapping.
+#
+# Version pins were intentionally omitted: no version of either package was
+# installed in the environment this file was generated in, so pinning a
+# number here would itself be a guess. Pin these once a target environment
+# is established.
+
+PySide6
+ollama

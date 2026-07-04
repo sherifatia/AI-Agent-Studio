@@ -1,17 +1,25 @@
+"""Sidebar navigation widget."""
+
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton
+from PySide6.QtWidgets import QPushButton, QVBoxLayout, QWidget
 
 
 class Sidebar(QWidget):
+    """Vertical navigation list emitting the selected page name.
+
+    The list of page names is currently duplicated by convention with
+    `ui/main_window.py` rather than sharing a single definition — see
+    docs/PROJECT_AUDIT.md section 5 and the planned `core/navigation.py`.
+    """
 
     page_changed = Signal(str)
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         self.setFixedWidth(220)
 
-        self.buttons = {}
+        self.buttons: dict[str, QPushButton] = {}
 
         self.layout = QVBoxLayout(self)
         self.layout.setContentsMargins(10, 10, 10, 10)
@@ -45,8 +53,12 @@ class Sidebar(QWidget):
 
         self.change_page("Dashboard")
 
-    def change_page(self, page):
+    def change_page(self, page: str) -> None:
+        """Mark `page` as active and emit `page_changed`.
 
+        Args:
+            page: The name of the page to activate.
+        """
         for name, button in self.buttons.items():
 
             if name == page:

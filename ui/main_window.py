@@ -1,9 +1,11 @@
+"""Application main window."""
+
 from PySide6.QtWidgets import (
-    QMainWindow,
-    QWidget,
     QHBoxLayout,
-    QVBoxLayout,
     QLabel,
+    QMainWindow,
+    QVBoxLayout,
+    QWidget,
 )
 
 from .theme import *
@@ -11,8 +13,14 @@ from .widgets.sidebar import Sidebar
 
 
 class MainWindow(QMainWindow):
+    """Top-level window: hosts the sidebar and the current workspace page.
 
-    def __init__(self):
+    `change_page()` currently only updates a placeholder title label —
+    swapping in real page widgets from `ui/widgets/*_page.py` is planned,
+    see docs/ROADMAP.md.
+    """
+
+    def __init__(self) -> None:
         super().__init__()
 
         self.setWindowTitle(APP_NAME)
@@ -20,8 +28,8 @@ class MainWindow(QMainWindow):
 
         self.build_ui()
 
-    def build_ui(self):
-
+    def build_ui(self) -> None:
+        """Construct the sidebar + workspace layout and wire navigation."""
         central = QWidget()
         self.setCentralWidget(central)
 
@@ -52,5 +60,10 @@ class MainWindow(QMainWindow):
 
         self.sidebar.page_changed.connect(self.change_page)
 
-    def change_page(self, page):
+    def change_page(self, page: str) -> None:
+        """Handle a sidebar navigation event.
+
+        Args:
+            page: The name of the page that was selected, e.g. "Chat".
+        """
         self.page_title.setText(page)

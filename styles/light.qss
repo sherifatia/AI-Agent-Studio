@@ -1,0 +1,3 @@
+/* Reserved: light theme stylesheet.
+   Not currently loaded by the application; ui/theme.py holds the active
+   color constants instead. See docs/PROJECT_AUDIT.md section 7. */

@@ -105,7 +105,14 @@ class MainWindow(QMainWindow):
         self.status_bar = StatusBar()
         self.setStatusBar(self.status_bar)
 
-        # Index 1: Models page — wired to the engine.
+        # Index 1: Chat page — Agent wraps the engine; page never touches engine directly.
+        from core.agent import Agent
+        from ui.widgets.chat_page import ChatPage
+        self._agent = Agent(engine=self._engine)
+        self._chat_page = ChatPage(agent=self._agent)
+        self._stack.addWidget(self._chat_page)
+
+        # Index 2: Models page — wired to the engine.
         from ui.widgets.models_page import ModelsPage
         self._models_page = ModelsPage(engine=self._engine)
         self._models_page.provider_changed.connect(self.status_bar.set_provider)
@@ -125,6 +132,7 @@ class MainWindow(QMainWindow):
 
     # Maps page name (sidebar label) to the real widget in the stack.
     _PAGE_WIDGETS: dict[str, str] = {
+        "Chat":   "_chat_page",
         "Models": "_models_page",
     }
 

@@ -111,8 +111,7 @@ provider. Also fix ChatPage._clear_conversation() to call memory.clear().
 - `ui/widgets/chat_page.py` — calls `agent.clear_memory()` on clear
 
 **Verification performed:**
-Full syntax scan (`python3 -c "compile(open('core/agent.py').read(), 'agent.py', 'exec')"`)
-and import verification of all changed modules.
+Full syntax scan and import verification of all changed modules.
 
 **Follow-ups / known limitations:**
 - Skills that need the full conversation context (e.g. "summarize my last
@@ -126,6 +125,42 @@ and import verification of all changed modules.
   Models page is a natural home for a Skills tab.
 
 **Commit:** `Build 011 - Skill Dispatch`
+
+---
+
+### Build 012 — Navigation & Event Bus
+**Date:** 2026-07-06
+**Type:** Feature (infrastructure)
+
+**Scope:**
+Implement `core/navigation.py` as the single source of truth for page
+identifiers (`PageId` StrEnum + `PAGE_ORDER`), replacing the free-form
+string duplication between Sidebar and MainWindow. Implement
+`core/events.py` as a lightweight publish/subscribe EventBus. Wire
+both into the sidebar, main window, and startup sequence.
+
+**Files created:**
+- `core/navigation.py` — `PageId` StrEnum, `PAGE_ORDER`, `from_label()`
+- `core/events.py` — `Event` dataclass, `EventBus` pub/sub
+
+**Files modified:**
+- `ui/widgets/sidebar.py` — uses `PageId` + `PAGE_ORDER` instead of
+  hardcoded string list
+- `ui/main_window.py` — accepts `EventBus`, uses `PageId` for navigation,
+  publishes `navigation.changed` events
+- `app.py` — registers `event_bus` startup service, passes bus to
+  `MainWindow`
+
+**Verification performed:**
+Full syntax scan and import verification of all changed modules.
+
+**Follow-ups / known limitations:**
+- The EventBus is not yet wired to `RuntimeEvent` dispatch; that is
+  part of the AI Runtime Implementation roadmap item.
+- `MainWindow.change_page()` retains the old string-parameter signature
+  for backward compatibility.
+
+**Commit:** `Build 012 - Navigation & Event Bus`
 
 ---
 

@@ -3,13 +3,15 @@
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QPushButton, QVBoxLayout, QWidget
 
+from core.navigation import PAGE_ORDER, PageId
+
 
 class Sidebar(QWidget):
-    """Vertical navigation list emitting the selected page name.
+    """Vertical navigation list emitting the selected ``PageId``.
 
-    The list of page names is currently duplicated by convention with
-    `ui/main_window.py` rather than sharing a single definition — see
-    docs/PROJECT_AUDIT.md section 5 and the planned `core/navigation.py`.
+    Page identifiers are sourced from ``core.navigation.PageId``, the
+    single source of truth, instead of being duplicated as free-form
+    strings.
     """
 
     #: Fixed width when the sidebar is fully expanded (existing behavior).
@@ -19,18 +21,18 @@ class Sidebar(QWidget):
     #: any control yet; this is foundation for a future collapse button.
     COLLAPSED_WIDTH = 60
 
-    #: Page name -> icon asset name (icon files are not implemented yet;
+    #: PageId -> icon asset name (icon files are not implemented yet;
     #: see `ui/resource_manager.py`). Reserved so a future Build can wire
     #: real icons in one place instead of scattering asset names.
-    PAGE_ICONS: dict[str, str] = {
-        "Dashboard": "dashboard.svg",
-        "Chat": "chat.svg",
-        "Models": "models.svg",
-        "Browser": "browser.svg",
-        "Memory": "memory.svg",
-        "Skills": "skills.svg",
-        "Workflows": "workflows.svg",
-        "Settings": "settings.svg",
+    PAGE_ICONS: dict[PageId, str] = {
+        PageId.DASHBOARD: "dashboard.svg",
+        PageId.CHAT: "chat.svg",
+        PageId.MODELS: "models.svg",
+        PageId.BROWSER: "browser.svg",
+        PageId.MEMORY: "memory.svg",
+        PageId.SKILLS: "skills.svg",
+        PageId.WORKFLOWS: "workflows.svg",
+        PageId.SETTINGS: "settings.svg",
     }
 
     page_changed = Signal(str)
@@ -47,10 +49,9 @@ class Sidebar(QWidget):
         self.layout.setContentsMargins(10, 10, 10, 10)
         self.layout.setSpacing(8)
 
-        pages = list(self.PAGE_ICONS.keys())
-
-        for page in pages:
-            button = QPushButton(page)
+        for page_id in PAGE_ORDER:
+            label = page_id.label
+            button = QPushButton(label)
             button.setCursor(Qt.PointingHandCursor)
             button.setMinimumHeight(42)
 
@@ -59,22 +60,22 @@ class Sidebar(QWidget):
             # icon files exist under assets/icons/.
 
             button.clicked.connect(
-                lambda checked=False, p=page: self.change_page(p)
+                lambda checked=False, p=label: self.change_page(p)
             )
 
             self.layout.addWidget(button)
 
-            self.buttons[page] = button
+            self.buttons[label] = button
 
         self.layout.addStretch()
 
-        self.change_page("Dashboard")
+        self.change_page(PageId.DASHBOARD.label)
 
     def change_page(self, page: str) -> None:
-        """Mark `page` as active and emit `page_changed`.
+        """Mark `page` label as active and emit `page_changed`.
 
         Args:
-            page: The name of the page to activate.
+            page: The human-readable page label, e.g. ``"Dashboard"``.
         """
         for name, button in self.buttons.items():
 

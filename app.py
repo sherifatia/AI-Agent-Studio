@@ -15,6 +15,7 @@ from PySide6.QtWidgets import QApplication
 from core.application import Application
 from core.app_info import APP_INFO
 from core.error_handler import install_global_exception_handler
+from core.events import EventBus
 from core.logging_setup import get_logger, setup_logging
 from core.startup import ServiceLoader, StartupPhase
 from ui.main_window import MainWindow
@@ -48,6 +49,9 @@ def _build_service_loader(
         _logger.info("Starting %s", APP_INFO.full_version_string)
         app.initialise()
 
+    def _initialise_event_bus() -> None:
+        context["event_bus"] = EventBus()
+
     def _load_resources() -> None:
         context["resource_manager"] = ResourceManager()
 
@@ -62,6 +66,7 @@ def _build_service_loader(
             engine=app.engine,
             memory=app.memory,
             skill_registry=app.skill_registry,
+            event_bus=context["event_bus"],
         )
         window.show()
 
@@ -74,6 +79,7 @@ def _build_service_loader(
 
     loader.register(StartupPhase.LOGGING,          _start_logging)
     loader.register(StartupPhase.APPLICATION_INFO, _initialise_application)
+    loader.register("event_bus",                   _initialise_event_bus)
     loader.register(StartupPhase.RESOURCES,        _load_resources)
     loader.register(StartupPhase.USER_INTERFACE,   _start_user_interface)
     loader.register(StartupPhase.READY,            _mark_ready)

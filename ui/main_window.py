@@ -11,7 +11,9 @@ from PySide6.QtWidgets import (
 )
 
 from core.app_info import APP_INFO
+from core.events import Event, EventBus
 from core.logging_setup import get_logger
+from core.navigation import PageId
 from ui.dialog_manager import DialogManager
 from ui.theme import (
     MIN_WINDOW_HEIGHT,
@@ -43,6 +45,7 @@ class MainWindow(QMainWindow):
         engine: object = None,
         memory: object = None,
         skill_registry: object = None,
+        event_bus: EventBus | None = None,
     ) -> None:
         """Create the main window.
 
@@ -54,12 +57,15 @@ class MainWindow(QMainWindow):
             engine: The running AIEngine instance. Passed to page widgets
                 that need it (currently: ModelsPage). None is safe —
                 pages handle a missing engine gracefully.
+            event_bus: Application-wide ``EventBus``. Created internally if
+                ``None``.
         """
         super().__init__()
 
         self._engine = engine
         self._memory = memory
         self._skill_registry = skill_registry
+        self.event_bus = event_bus or EventBus()
         self._window_state = WindowStateManager()
         self.dialogs = DialogManager()
 
@@ -97,7 +103,7 @@ class MainWindow(QMainWindow):
         # Index 0: placeholder for pages not yet implemented.
         self._placeholder = QWidget()
         ph_layout = QVBoxLayout(self._placeholder)
-        self.page_title = QLabel("Dashboard")
+        self.page_title = QLabel(PageId.DASHBOARD.label)
         self.page_title.setStyleSheet(
             "font-size:24px; font-weight:bold; margin:20px;"
         )
@@ -134,28 +140,45 @@ class MainWindow(QMainWindow):
     # Navigation
     # ------------------------------------------------------------------
 
-    # Maps page name (sidebar label) to the real widget in the stack.
+    # Maps PageId.value (e.g. "chat") to the widget attribute name in self.
     _PAGE_WIDGETS: dict[str, str] = {
-        "Chat":   "_chat_page",
-        "Models": "_models_page",
+        PageId.CHAT.value:   "_chat_page",
+        PageId.MODELS.value: "_models_page",
     }
 
-    def _on_page_changed(self, page: str) -> None:
+    def _on_page_changed(self, page_label: str) -> None:
         """Handle a sidebar navigation signal.
 
         Args:
-            page: The page name selected, e.g. "Chat", "Models".
+            page_label: The human-readable page label from the sidebar,
+                e.g. ``"Chat"``, ``"Models"``.
         """
-        attr = self._PAGE_WIDGETS.get(page)
+        # Resolve the label to a PageId, then use its value for lookup.
+        try:
+            page_id = PageId.from_label(page_label)
+        except ValueError:
+            self.page_title.setText(page_label)
+            self._stack.setCurrentWidget(self._placeholder)
+            return
+
+        attr = self._PAGE_WIDGETS.get(page_id.value)
         if attr and hasattr(self, attr):
             self._stack.setCurrentWidget(getattr(self, attr))
         else:
-            # Unimplemented page — show the placeholder with its title.
-            self.page_title.setText(page)
+            self.page_title.setText(page_id.label)
             self._stack.setCurrentWidget(self._placeholder)
 
-        self.status_bar.show_message(f"Switched to {page}")
-        _logger.debug("Page changed to: %s", page)
+        self.status_bar.show_message(f"Switched to {page_id.label}")
+        _logger.debug("Page changed to: %s", page_id.value)
+
+        # Broadcast navigation event on the event bus.
+        self.event_bus.publish(
+            Event(
+                name="navigation.changed",
+                sender=self,
+                data={"page_id": page_id.value, "label": page_id.label},
+            )
+        )
 
     def change_page(self, page: str) -> None:
         """Public alias for _on_page_changed, kept for API stability."""

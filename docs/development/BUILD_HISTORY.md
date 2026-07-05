@@ -236,5 +236,41 @@ Full syntax scan and import verification of all changed modules.
 
 ---
 
+### Build 015 — AI Runtime Implementation
+**Date:** 2026-07-06
+**Type:** Feature (infrastructure)
+
+**Scope:**
+Implement the actual business logic behind `Runtime`, `RuntimeContext`,
+`RuntimeState`, and `RuntimeEvent`. Adds validated state machine transitions
+(IDLE → RUNNING → WAITING → RUNNING/COMPLETED/FAILED), event dispatch via
+the EventBus, and a `run(task)` method that coordinates the full execution
+lifecycle (delegating to AIEngine, recording to Session, emitting lifecycle
+events).
+
+**Files modified:**
+- `core/runtime.py` — complete rewrite with real logic:
+  - `RuntimeState.can_transition_to()` — validates state machine rules
+  - `Runtime.run(task)` — full lifecycle: start, execute, complete/fail
+  - `Runtime._transition()` — validates and applies state changes
+  - `Runtime._emit()` — dispatches RuntimeEvent through EventBus
+  - `RuntimeContext` gains optional `event_bus` field
+  - `RuntimeEvent.runtime_state` field added for context
+
+**Verification performed:**
+Full syntax scan and import verification.
+
+**Follow-ups / known limitations:**
+- `Runtime` is not yet wired into the application startup or Agent — the
+  ChatPage and Agent still call `engine.ask()` directly. Wiring Runtime as
+  the execution layer between Agent and Engine is the natural next Build.
+- No timeout mechanism for RUNNING or WAITING states.
+- `RuntimeEvent` is dispatched via `core.events.Event` bridge; no direct
+  listener exists yet.
+
+**Commit:** `Build 015 - AI Runtime Implementation`
+
+---
+
 *(Future Builds: add new entries above this line, using the template
 above.)*

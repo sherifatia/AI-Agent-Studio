@@ -161,6 +161,7 @@ class ChatPage(QWidget):
         """Remove all messages from the view and reset history."""
         self._conversation.clear()
         self._history.clear()
+        self._agent.clear_memory()
         self._set_status("Conversation cleared")
         _logger.debug("Chat conversation cleared")
 

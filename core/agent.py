@@ -9,6 +9,7 @@ Rules enforced here:
 - Agent NEVER talks to a provider directly.
 - Agent NEVER imports Qt.
 - All skill execution goes through the Agent (Build 010+).
+- Skill dispatch happens before LLM call (Build 011+).
 """
 
 from __future__ import annotations
@@ -24,8 +25,16 @@ if TYPE_CHECKING:
     from core.engine import AIEngine
     from memory.manager import MemoryManager
     from skills.skill_manager import SkillRegistry
+    from skills.skill import SkillResult
 
 _logger = get_logger(__name__)
+
+# Maps command-style aliases (e.g. /time) to registered skill names.
+_SKILL_ALIASES: dict[str, str] = {
+    "time": "current_time",
+    "calc": "calculator",
+    "calculate": "calculator",
+}
 
 
 class Agent:
@@ -58,13 +67,27 @@ class Agent:
     def run(self, task: Task) -> TaskResult:
         """Execute ``task`` and return its result.
 
-        Workflow::
+        Workflow when a skill matches::
+
+            Task.input
+                ↓  (detect skill)
+            SkillRegistry.execute(name, input)
+                ↓
+            SkillResult wrapped in TaskResult
+                ↓
+            MemoryManager.record(task, result)
+                ↓
+            TaskResult
+
+        Workflow when no skill matches (falls through to LLM)::
 
             Task.input + Task.history
                 ↓  (build messages)
             AIEngine.ask(messages)
                 ↓  (provider.generate)
-            Response
+            Response → TaskResult
+                ↓
+            MemoryManager.record(task, result)
                 ↓
             TaskResult
 
@@ -79,6 +102,12 @@ class Agent:
         start = time.monotonic()
 
         try:
+            # Check for a skill match before calling the LLM.
+            skill_hit = self._detect_skill(task.input)
+            if skill_hit is not None:
+                return self._run_skill(task, skill_hit[0], skill_hit[1], start)
+
+            # No skill matched — delegate to the LLM provider.
             messages = self._build_messages(task)
             response = self._engine.ask(messages)
             duration = time.monotonic() - start
@@ -111,6 +140,119 @@ class Agent:
                 duration=duration,
                 metadata=dict(task.metadata),
             )
+
+    def clear_memory(self) -> None:
+        """Clear all recorded memory (delegates to ``MemoryManager.clear()``).
+
+        Safe to call even when no memory manager is attached.
+        """
+        if self._memory is not None:
+            self._memory.clear()
+            _logger.debug("Agent: memory cleared via clear_memory()")
+        else:
+            _logger.debug("Agent: clear_memory() called, but no memory manager")
+
+    # ------------------------------------------------------------------
+    # Skill dispatch
+    # ------------------------------------------------------------------
+
+    def _run_skill(
+        self,
+        task: Task,
+        skill_name: str,
+        skill_input: str,
+        start: float,
+    ) -> TaskResult:
+        """Execute a skill and return a TaskResult, without calling the LLM.
+
+        Args:
+            task:       The original task (used for history/metadata).
+            skill_name: The registered skill name.
+            skill_input: Input string forwarded to the skill.
+            start:       ``time.monotonic()`` timestamp from ``run()``.
+
+        Returns:
+            A ``TaskResult`` wrapping the ``SkillResult``.
+        """
+        if self._skill_registry is None:
+            duration = time.monotonic() - start
+            return TaskResult(
+                success=False,
+                response="",
+                error="No skill registry available. Cannot execute skill.",
+                duration=duration,
+                metadata=dict(task.metadata),
+            )
+
+        raw = self._skill_registry.execute(skill_name, skill_input)
+        duration = time.monotonic() - start
+
+        skill_result: "SkillResult" = raw
+
+        if skill_result.success:
+            task_result = TaskResult(
+                success=True,
+                response=skill_result.output,
+                duration=duration,
+                metadata={
+                    "skill": skill_name,
+                    **skill_result.metadata,
+                    **task.metadata,
+                },
+            )
+        else:
+            task_result = TaskResult(
+                success=False,
+                response="",
+                error=skill_result.error,
+                duration=duration,
+                metadata={"skill": skill_name, **task.metadata},
+            )
+
+        if self._memory is not None:
+            self._memory.record(task, task_result)
+
+        _logger.debug(
+            "Skill '%s' executed in %.2fs — success=%s",
+            skill_name,
+            duration,
+            task_result.success,
+        )
+        return task_result
+
+    @staticmethod
+    def _detect_skill(input_text: str) -> tuple[str, str] | None:
+        """Check whether ``input_text`` triggers a registered skill.
+
+        Detection rules:
+        1. Input must start with ``/`` followed by a command name.
+        2. The command name is matched (case-insensitive) against
+           ``_SKILL_ALIASES`` and then against all registered skill names.
+           *The registry is not consulted here* — alias resolution is
+           static so detection remains a pure function.
+
+        Args:
+            input_text: The raw user input.
+
+        Returns:
+            ``(skill_name, remainder)`` if a skill is detected, or
+            ``None`` if no skill matches.
+        """
+        text = input_text.strip()
+        if not text.startswith("/"):
+            return None
+
+        # Split "/command rest" into command and remainder.
+        parts = text[1:].split(None, 1)
+        cmd = parts[0].lower() if parts else ""
+        remainder = parts[1].strip() if len(parts) > 1 else ""
+
+        if not cmd:
+            return None
+
+        # Check aliases first, then try the command as a direct skill name.
+        skill_name = _SKILL_ALIASES.get(cmd, cmd)
+        return (skill_name, remainder)
 
     # ------------------------------------------------------------------
     # Internal helpers

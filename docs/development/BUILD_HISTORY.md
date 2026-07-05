@@ -95,5 +95,39 @@ across two separate process runs via `QSettings`.
 
 ---
 
+### Build 011 — Skill Dispatch
+**Date:** 2026-07-06
+**Type:** Feature
+
+**Scope:**
+Wire the Agent.run() path to check for a skill trigger (leading `/` prefix)
+before calling the LLM. If a skill matches, execute it directly, wrap the
+SkillResult in a TaskResult, and record to memory — without calling the
+provider. Also fix ChatPage._clear_conversation() to call memory.clear().
+
+**Files modified:**
+- `core/agent.py` — added `_detect_skill()`, `_run_skill()`, skill-aware
+  `run()`, and `clear_memory()`
+- `ui/widgets/chat_page.py` — calls `agent.clear_memory()` on clear
+
+**Verification performed:**
+Full syntax scan (`python3 -c "compile(open('core/agent.py').read(), 'agent.py', 'exec')"`)
+and import verification of all changed modules.
+
+**Follow-ups / known limitations:**
+- Skills that need the full conversation context (e.g. "summarize my last
+  5 messages") will not work via `/skill` prefix since only the remainder
+  after the command is passed as input, not the history. A future Build
+  could pass history as part of the skill input.
+- Skill detection uses a static alias table. Dynamic discovery (e.g.
+  querying the SkillRegistry for all registered names) is a future
+  improvement.
+- No UI exists to show the user which skills are available. The
+  Models page is a natural home for a Skills tab.
+
+**Commit:** `Build 011 - Skill Dispatch`
+
+---
+
 *(Future Builds: add new entries above this line, using the template
 above.)*

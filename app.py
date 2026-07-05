@@ -61,6 +61,7 @@ def _build_service_loader(
             initial_provider=app.active_provider_name,
             engine=app.engine,
             memory=app.memory,
+            skill_registry=app.skill_registry,
         )
         window.show()
 

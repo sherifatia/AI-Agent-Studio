@@ -19,6 +19,7 @@ from core.logging_setup import get_logger
 from core.session import Session
 from memory.manager import MemoryManager
 from providers.provider_manager import ProviderManager
+from skills.skill_manager import SkillLoader, SkillRegistry
 
 _logger = get_logger(__name__)
 
@@ -44,6 +45,7 @@ class Application:
         self.provider_manager: ProviderManager = ProviderManager()
         self.engine: AIEngine = AIEngine()
         self.memory: MemoryManager = MemoryManager()
+        self.skill_registry: SkillRegistry = SkillRegistry()
 
         # Convenience properties populated by initialise()
         self.active_provider_name: str = ""
@@ -68,6 +70,7 @@ class Application:
 
         self._load_settings()
         self._start_engine()
+        self._load_skills()
         _logger.info(
             "Application initialised — provider: %s, model: %s",
             self.active_provider_name,
@@ -125,3 +128,15 @@ class Application:
         self.engine.set_provider(provider)
         self.active_provider_name = provider_name
         _logger.info("Provider switched to: %s", provider_name)
+
+    def _load_skills(self) -> None:
+        """Register the built-in demo skills into the skill registry."""
+        from skills.builtin.current_time import CurrentTimeSkill
+        from skills.builtin.calculator import CalculatorSkill
+
+        loader = SkillLoader(self.skill_registry)
+        loader.load([CurrentTimeSkill(), CalculatorSkill()])
+        _logger.info(
+            "Skills loaded: %s",
+            [s.name for s in self.skill_registry.all_skills()],
+        )

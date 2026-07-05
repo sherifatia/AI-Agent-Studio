@@ -42,6 +42,7 @@ class MainWindow(QMainWindow):
         initial_provider: str = "",
         engine: object = None,
         memory: object = None,
+        skill_registry: object = None,
     ) -> None:
         """Create the main window.
 
@@ -58,6 +59,7 @@ class MainWindow(QMainWindow):
 
         self._engine = engine
         self._memory = memory
+        self._skill_registry = skill_registry
         self._window_state = WindowStateManager()
         self.dialogs = DialogManager()
 
@@ -110,7 +112,7 @@ class MainWindow(QMainWindow):
         # Index 1: Chat page — Agent wraps the engine; page never touches engine directly.
         from core.agent import Agent
         from ui.widgets.chat_page import ChatPage
-        self._agent = Agent(engine=self._engine, memory=self._memory)
+        self._agent = Agent(engine=self._engine, memory=self._memory, skill_registry=self._skill_registry)
         self._chat_page = ChatPage(agent=self._agent)
         self._stack.addWidget(self._chat_page)
 

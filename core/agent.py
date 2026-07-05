@@ -21,10 +21,9 @@ from core.task import Task
 from core.task_result import TaskResult
 
 if TYPE_CHECKING:
-    from memory.manager import MemoryManager
-
-if TYPE_CHECKING:
     from core.engine import AIEngine
+    from memory.manager import MemoryManager
+    from skills.skill_manager import SkillRegistry
 
 _logger = get_logger(__name__)
 
@@ -46,9 +45,11 @@ class Agent:
         self,
         engine: "AIEngine",
         memory: "MemoryManager | None" = None,
+        skill_registry: "SkillRegistry | None" = None,
     ) -> None:
         self._engine = engine
         self._memory: "MemoryManager | None" = memory
+        self._skill_registry: "SkillRegistry | None" = skill_registry
 
     # ------------------------------------------------------------------
     # Public API

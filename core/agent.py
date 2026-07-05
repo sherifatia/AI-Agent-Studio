@@ -1,4 +1,4 @@
-"""Agent — executes Tasks using an AIEngine.
+"""Agent — executes Tasks using an AIEngine (optionally via Runtime).
 
 ``Agent`` sits between the UI layer and the engine/provider layer.  Its
 only job is to take a ``Task``, build the message list, call the engine,
@@ -10,6 +10,7 @@ Rules enforced here:
 - Agent NEVER imports Qt.
 - All skill execution goes through the Agent (Build 010+).
 - Skill dispatch happens before LLM call (Build 011+).
+- LLM execution goes through Runtime when available (Build 016+).
 """
 
 from __future__ import annotations
@@ -23,6 +24,7 @@ from core.task_result import TaskResult
 
 if TYPE_CHECKING:
     from core.engine import AIEngine
+    from core.runtime import Runtime
     from memory.manager import MemoryManager
     from skills.skill_manager import SkillRegistry
     from skills.skill import SkillResult
@@ -38,9 +40,13 @@ _SKILL_ALIASES: dict[str, str] = {
 
 
 class Agent:
-    """Executes ``Task`` objects via an ``AIEngine``.
+    """Executes ``Task`` objects via an ``AIEngine`` or ``Runtime``.
 
-    The ``Agent`` is stateless with respect to conversation history —
+    When a ``Runtime`` is provided, the LLM path delegates to
+    ``runtime.run(task)`` for lifecycle-managed execution.  When no runtime
+    is available, the Agent falls back to calling ``engine.ask()`` directly.
+
+    The Agent is stateless with respect to conversation history —
     history is part of the ``Task`` submitted by the caller.  Long-term
     memory (Build 009) will be written by the Agent after each completed
     task, not by the UI.
@@ -55,10 +61,12 @@ class Agent:
         engine: "AIEngine",
         memory: "MemoryManager | None" = None,
         skill_registry: "SkillRegistry | None" = None,
+        runtime: "Runtime | None" = None,
     ) -> None:
         self._engine = engine
         self._memory: "MemoryManager | None" = memory
         self._skill_registry: "SkillRegistry | None" = skill_registry
+        self._runtime: "Runtime | None" = runtime
 
     # ------------------------------------------------------------------
     # Public API
@@ -108,23 +116,25 @@ class Agent:
                 return self._run_skill(task, skill_hit[0], skill_hit[1], start)
 
             # No skill matched — delegate to the LLM provider.
-            messages = self._build_messages(task)
-            response = self._engine.ask(messages)
-            duration = time.monotonic() - start
+            # Use Runtime when available for lifecycle-managed execution.
+            if self._runtime is not None:
+                task_result = self._runtime.run(task)
+            else:
+                messages = self._build_messages(task)
+                response = self._engine.ask(messages)
+                duration = time.monotonic() - start
+                task_result = TaskResult(
+                    success=True,
+                    response=response.content,
+                    duration=duration,
+                    metadata={
+                        "provider": response.provider,
+                        **task.metadata,
+                    },
+                )
 
             _logger.debug(
-                "Agent.run() complete in %.2fs via %s",
-                duration,
-                response.provider,
-            )
-            task_result = TaskResult(
-                success=True,
-                response=response.content,
-                duration=duration,
-                metadata={
-                    "provider": response.provider,
-                    **task.metadata,
-                },
+                "Agent.run() complete in %.2fs", task_result.duration,
             )
             if self._memory is not None:
                 self._memory.record(task, task_result)

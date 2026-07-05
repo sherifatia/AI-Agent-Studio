@@ -61,6 +61,15 @@ def _build_service_loader(
         theme_manager = ThemeManager(context["resource_manager"])
         theme_manager.set_mode(theme_manager.current_mode, app=qt_app)
 
+        from core.runtime import Runtime, RuntimeContext
+        runtime = Runtime(
+            RuntimeContext(
+                engine=app.engine,
+                session=app.engine.session,
+                event_bus=context["event_bus"],
+            )
+        )
+
         window = MainWindow(
             initial_provider=app.active_provider_name,
             engine=app.engine,
@@ -68,6 +77,7 @@ def _build_service_loader(
             skill_registry=app.skill_registry,
             settings=app.settings,
             event_bus=context["event_bus"],
+            runtime=runtime,
         )
         window.show()
 

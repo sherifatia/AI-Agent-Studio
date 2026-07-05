@@ -272,5 +272,30 @@ Full syntax scan and import verification.
 
 ---
 
-*(Future Builds: add new entries above this line, using the template
-above.)*
+### Build 016 — Wire Runtime into Agent & App Startup
+**Date:** 2026-07-06
+**Type:** Feature (infrastructure)
+
+**Scope:**
+Wire the Runtime into the Agent as the LLM execution layer, and into
+app startup so a Runtime is created and passed down to MainWindow.
+Agent.run() now delegates to runtime.run(task) when a Runtime is
+available, falling back to direct engine.ask() otherwise.
+
+**Files modified:**
+- `core/agent.py` — accepts optional `Runtime` parameter, delegates LLM
+  path to `runtime.run(task)` when available, falls back to `engine.ask()`
+- `ui/main_window.py` — accepts `runtime` parameter, passes it to `Agent`
+- `app.py` — creates `Runtime` with `RuntimeContext(engine, session, event_bus)`,
+  passes it to `MainWindow`
+
+**Verification performed:**
+Syntax check on all three changed modules.
+
+**Follow-ups / known limitations:**
+- No timeout mechanism for RUNNING or WAITING states.
+- RuntimeEvent is dispatched but no direct listener consumes it yet.
+- The Runtime is created with the engine's session, which is the same
+  session shared by the engine — Runtime writes messages to it.
+
+**Commit:** `Build 016 - Wire Runtime into Agent & App Startup`

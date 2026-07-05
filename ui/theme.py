@@ -1,15 +1,13 @@
-"""Static theme constants used by the Qt UI.
+"""Qt-specific UI dimension and colour constants.
 
-Not connected to `styles/dark.qss` / `styles/light.qss` — see
-docs/PROJECT_AUDIT.md section 7 for the reconciliation this implies.
+This module owns layout dimensions (window sizes) and colour tokens.
+It does NOT re-export application identity values such as the app name
+or window title — import those directly from `core.app_info.APP_INFO`.
+
+Note: `styles/dark.qss` and `styles/light.qss` exist as reserved
+placeholders. The COLORS dict below and those files are currently
+disconnected; see docs/PROJECT_AUDIT.md section 7.
 """
-
-from core.app_info import APP_INFO
-
-# Sourced from core.app_info.APP_INFO — the single source of truth for
-# application metadata — rather than duplicated as a separate string.
-APP_NAME: str = APP_INFO.NAME
-WINDOW_TITLE: str = APP_INFO.window_title
 
 WINDOW_WIDTH: int = 1400
 WINDOW_HEIGHT: int = 900
@@ -25,4 +23,3 @@ COLORS: dict[str, str] = {
     "accent": "#007ACC",
     "text": "#FFFFFF",
 }
-

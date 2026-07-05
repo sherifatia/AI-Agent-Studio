@@ -1,87 +1,141 @@
-"""Professional application startup sequence.
+"""Service loader — application startup sequence.
 
-Defines a single, ordered path the application boots through, with
-clearly named phases that are logged as they run. Additional phases can
-be registered by future Builds (e.g. asset preloading, provider health
-checks) without changing this module's core loop — see
-`StartupSequence.register_phase()`.
+Provides a ServiceLoader that boots the application through a named,
+ordered sequence of services. Service names are plain strings (not
+constrained to a closed enum), so future Builds can register entirely new
+service categories (e.g. "provider_health_check", "memory_warmup") without
+modifying this file.
+
+StartupPhase provides conventional names for the built-in boot services.
+It is a plain class of string constants, not a StrEnum, so it is open:
+external code can define additional phase name strings freely alongside it.
 """
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from enum import StrEnum
 
 from core.logging_setup import get_logger
 
 _logger = get_logger(__name__)
 
 
-class StartupPhase(StrEnum):
-    """Named phases of the application boot sequence, in run order."""
+class StartupPhase:
+    """Conventional service name constants for the built-in boot phases.
 
-    LOGGING = "logging"
-    CONFIGURATION = "configuration"
-    APPLICATION_INFO = "application_info"
-    RESOURCES = "resources"
-    USER_INTERFACE = "user_interface"
-    READY = "ready"
+    These are plain strings, not enum members. Any string is a valid
+    service name in ServiceLoader — these constants exist for readability
+    and to prevent typos at call sites, not to constrain what names
+    are allowed.
+    """
+
+    LOGGING: str = "logging"
+    CONFIGURATION: str = "configuration"
+    APPLICATION_INFO: str = "application_info"
+    RESOURCES: str = "resources"
+    USER_INTERFACE: str = "user_interface"
+    READY: str = "ready"
 
 
 @dataclass
-class StartupStep:
-    """A single named unit of work run during startup.
+class _Service:
+    """Internal record of a registered service.
 
     Attributes:
-        phase: The `StartupPhase` this step belongs to.
-        action: A zero-argument callable performing the step's work.
-            Exceptions are allowed to propagate — the caller of
-            `StartupSequence.run()` decides how to handle a failed step.
+        name: Unique service identifier string.
+        loader: Zero-argument callable that initialises the service.
     """
 
-    phase: StartupPhase
-    action: Callable[[], None]
+    name: str
+    loader: Callable[[], None]
 
 
-@dataclass
-class StartupSequence:
-    """Runs a series of `StartupStep`s in order, logging each phase.
+class ServiceLoader:
+    """Runs a series of named services in registration order.
 
-    Built-in phases are registered by the application entry point
-    (`app.py`); future Builds can call `register_phase()` before `run()`
-    to add additional loading tasks (e.g. preloading resources, checking
-    provider connectivity) without modifying this class.
+    Usage::
+
+        loader = ServiceLoader()
+        loader.register("logging", setup_logging)
+        loader.register("ui", build_window)
+        loader.run()
+
+    Services run in the order they are registered. Any exception raised
+    by a service is logged and re-raised — startup does not swallow
+    errors, since continuing with a partially-initialised application is
+    worse than failing fast.
+
+    Future Builds may register additional services (e.g. "memory",
+    "browser", "plugins") without touching this file. No business logic
+    lives here — only the run loop.
     """
 
-    steps: list[StartupStep] = field(default_factory=list)
+    def __init__(self) -> None:
+        self._services: list[_Service] = []
+        self._names: set[str] = set()
 
-    def register_phase(self, phase: StartupPhase, action: Callable[[], None]) -> None:
-        """Add a step to the sequence.
+    def register(self, name: str, loader: Callable[[], None]) -> None:
+        """Register a named service.
 
         Args:
-            phase: The `StartupPhase` this step belongs to.
-            action: A zero-argument callable performing the step's work.
-        """
-        self.steps.append(StartupStep(phase=phase, action=action))
-
-    def run(self) -> None:
-        """Execute every registered step in order, logging each phase.
+            name: A unique service identifier, e.g. "logging",
+                "provider_health_check". Any non-empty string is valid.
+            loader: A zero-argument callable that initialises the service.
 
         Raises:
-            Exception: Whatever exception a step raises, propagated
-                unchanged after being logged. Startup does not swallow
-                errors — a failed step should stop the application rather
-                than continue in an unknown state.
+            ValueError: If `name` is empty or already registered.
         """
-        _logger.info("Startup sequence beginning (%d step(s))", len(self.steps))
+        if not name:
+            raise ValueError("Service name must not be empty")
+        if name in self._names:
+            raise ValueError(f"Service already registered: '{name}'")
 
-        for step in self.steps:
-            _logger.info("Startup phase: %s", step.phase.value)
+        self._services.append(_Service(name=name, loader=loader))
+        self._names.add(name)
+
+    def run(self) -> None:
+        """Execute every registered service in order.
+
+        Raises:
+            Exception: Whatever a service raises, after logging it.
+        """
+        _logger.info(
+            "ServiceLoader starting (%d service(s))", len(self._services)
+        )
+
+        for service in self._services:
+            _logger.info("Starting service: %s", service.name)
             try:
-                step.action()
+                service.loader()
             except Exception:
                 _logger.exception(
-                    "Startup phase '%s' failed", step.phase.value
+                    "Service '%s' failed to start", service.name
                 )
                 raise
 
-        _logger.info("Startup sequence complete")
+        _logger.info("All services started successfully")
+
+
+# ---------------------------------------------------------------------------
+# Backward-compatibility alias
+# ---------------------------------------------------------------------------
+# Build 001 registered phases via StartupSequence.register_phase(phase, fn).
+# ServiceLoader.register(name, fn) is the new API. The alias below keeps
+# any code that instantiated StartupSequence working without change.
+
+class StartupSequence(ServiceLoader):
+    """Deprecated alias for ServiceLoader — kept for backward compatibility.
+
+    New code should use ServiceLoader directly. This alias will be removed
+    once no callers remain.
+    """
+
+    def register_phase(
+        self, phase: str, action: Callable[[], None]
+    ) -> None:
+        """Alias for ServiceLoader.register() using Build001 naming.
+
+        Args:
+            phase: Service name (was StartupPhase enum value in Build001).
+            action: Loader callable.
+        """
+        self.register(name=phase, loader=action)

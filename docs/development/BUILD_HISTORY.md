@@ -164,5 +164,39 @@ Full syntax scan and import verification of all changed modules.
 
 ---
 
+### Build 013 — UI Pages (Skills, Dashboard, Settings)
+**Date:** 2026-07-06
+**Type:** Feature
+
+**Scope:**
+Implement three formerly-empty page widgets with real content: SkillsPage
+lists registered skills from the SkillRegistry; DashboardPage shows
+session statistics from MemoryManager and active provider info;
+SettingsPage displays current config/settings.json values in a read-only
+view. Wire all three into MainWindow's stacked workspace and navigation.
+
+**Files created:**
+- `ui/widgets/skills_page.py` — lists registered skills with descriptions
+- `ui/widgets/dashboard_page.py` — session stats, app info, active provider
+- `ui/widgets/settings_page.py` — read-only config display
+
+**Files modified:**
+- `ui/main_window.py` — creates and wires SkillsPage, DashboardPage,
+  SettingsPage; accepts `settings` parameter
+- `app.py` — passes `app.settings` to `MainWindow`
+
+**Verification performed:**
+Full syntax scan and import verification of all new and changed modules.
+
+**Follow-ups / known limitations:**
+- Settings page is read-only; editing is reserved for a future Build.
+- Browser, Memory, and Workflow pages remain as placeholder stubs.
+- Dashboard stats update only when the page is first shown; a periodic
+  refresh or event-driven update is future scope.
+
+**Commit:** `Build 013 - UI Pages (Skills, Dashboard, Settings)`
+
+---
+
 *(Future Builds: add new entries above this line, using the template
 above.)*

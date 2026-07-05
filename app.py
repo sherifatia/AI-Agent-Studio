@@ -66,6 +66,7 @@ def _build_service_loader(
             engine=app.engine,
             memory=app.memory,
             skill_registry=app.skill_registry,
+            settings=app.settings,
             event_bus=context["event_bus"],
         )
         window.show()

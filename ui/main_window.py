@@ -45,6 +45,7 @@ class MainWindow(QMainWindow):
         engine: object = None,
         memory: object = None,
         skill_registry: object = None,
+        settings: object = None,
         event_bus: EventBus | None = None,
     ) -> None:
         """Create the main window.
@@ -65,6 +66,7 @@ class MainWindow(QMainWindow):
         self._engine = engine
         self._memory = memory
         self._skill_registry = skill_registry
+        self._settings = settings
         self.event_bus = event_bus or EventBus()
         self._window_state = WindowStateManager()
         self.dialogs = DialogManager()
@@ -100,33 +102,51 @@ class MainWindow(QMainWindow):
         self._stack = QStackedWidget()
         root.addWidget(self._stack)
 
-        # Index 0: placeholder for pages not yet implemented.
-        self._placeholder = QWidget()
-        ph_layout = QVBoxLayout(self._placeholder)
-        self.page_title = QLabel(PageId.DASHBOARD.label)
-        self.page_title.setStyleSheet(
-            "font-size:24px; font-weight:bold; margin:20px;"
-        )
-        ph_layout.addWidget(self.page_title)
-        ph_layout.addStretch()
-        self._stack.addWidget(self._placeholder)
-
         # Status bar must be created before page widgets that connect to it.
         self.status_bar = StatusBar()
         self.setStatusBar(self.status_bar)
 
-        # Index 1: Chat page — Agent wraps the engine; page never touches engine directly.
+        # Index 0: Chat page — Agent wraps the engine; page never touches engine directly.
         from core.agent import Agent
         from ui.widgets.chat_page import ChatPage
         self._agent = Agent(engine=self._engine, memory=self._memory, skill_registry=self._skill_registry)
         self._chat_page = ChatPage(agent=self._agent)
         self._stack.addWidget(self._chat_page)
 
-        # Index 2: Models page — wired to the engine.
+        # Index 1: Models page — wired to the engine.
         from ui.widgets.models_page import ModelsPage
         self._models_page = ModelsPage(engine=self._engine)
         self._models_page.provider_changed.connect(self.status_bar.set_provider)
         self._stack.addWidget(self._models_page)
+
+        # Index 2: Skills page — shows registered skills.
+        from ui.widgets.skills_page import SkillsPage
+        self._skills_page = SkillsPage(skill_registry=self._skill_registry)
+        self._stack.addWidget(self._skills_page)
+
+        # Index 3: Dashboard page — session stats.
+        from ui.widgets.dashboard_page import DashboardPage
+        self._dashboard_page = DashboardPage(
+            memory=self._memory, engine=self._engine
+        )
+        self._stack.addWidget(self._dashboard_page)
+
+        # Index 4: Settings page — read-only config view.
+        from ui.widgets.settings_page import SettingsPage
+        self._settings_page = SettingsPage(settings=self._settings)
+        self._stack.addWidget(self._settings_page)
+
+        # Index 5: placeholder widget for pages not yet implemented
+        # (Browser, Memory, Workflow).
+        self._placeholder = QWidget()
+        ph_layout = QVBoxLayout(self._placeholder)
+        self.page_title = QLabel("")
+        self.page_title.setStyleSheet(
+            "font-size:24px; font-weight:bold; margin:20px;"
+        )
+        ph_layout.addWidget(self.page_title)
+        ph_layout.addStretch()
+        self._stack.addWidget(self._placeholder)
 
         self.sidebar.page_changed.connect(self._on_page_changed)
 
@@ -142,8 +162,11 @@ class MainWindow(QMainWindow):
 
     # Maps PageId.value (e.g. "chat") to the widget attribute name in self.
     _PAGE_WIDGETS: dict[str, str] = {
-        PageId.CHAT.value:   "_chat_page",
-        PageId.MODELS.value: "_models_page",
+        PageId.CHAT.value:     "_chat_page",
+        PageId.MODELS.value:   "_models_page",
+        PageId.SKILLS.value:   "_skills_page",
+        PageId.DASHBOARD.value: "_dashboard_page",
+        PageId.SETTINGS.value: "_settings_page",
     }
 
     def _on_page_changed(self, page_label: str) -> None:

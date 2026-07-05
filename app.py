@@ -60,6 +60,7 @@ def _build_service_loader(
         window = MainWindow(
             initial_provider=app.active_provider_name,
             engine=app.engine,
+            memory=app.memory,
         )
         window.show()
 

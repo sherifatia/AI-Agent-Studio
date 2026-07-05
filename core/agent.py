@@ -21,6 +21,9 @@ from core.task import Task
 from core.task_result import TaskResult
 
 if TYPE_CHECKING:
+    from memory.manager import MemoryManager
+
+if TYPE_CHECKING:
     from core.engine import AIEngine
 
 _logger = get_logger(__name__)
@@ -39,8 +42,13 @@ class Agent:
                 ``Session``; the Agent must not replace it.
     """
 
-    def __init__(self, engine: "AIEngine") -> None:
+    def __init__(
+        self,
+        engine: "AIEngine",
+        memory: "MemoryManager | None" = None,
+    ) -> None:
         self._engine = engine
+        self._memory: "MemoryManager | None" = memory
 
     # ------------------------------------------------------------------
     # Public API
@@ -79,7 +87,7 @@ class Agent:
                 duration,
                 response.provider,
             )
-            return TaskResult(
+            task_result = TaskResult(
                 success=True,
                 response=response.content,
                 duration=duration,
@@ -88,6 +96,9 @@ class Agent:
                     **task.metadata,
                 },
             )
+            if self._memory is not None:
+                self._memory.record(task, task_result)
+            return task_result
 
         except Exception as exc:
             duration = time.monotonic() - start

@@ -17,6 +17,7 @@ from config.settings import Settings
 from core.engine import AIEngine
 from core.logging_setup import get_logger
 from core.session import Session
+from memory.manager import MemoryManager
 from providers.provider_manager import ProviderManager
 
 _logger = get_logger(__name__)
@@ -42,6 +43,7 @@ class Application:
         self.session: Session = Session()
         self.provider_manager: ProviderManager = ProviderManager()
         self.engine: AIEngine = AIEngine()
+        self.memory: MemoryManager = MemoryManager()
 
         # Convenience properties populated by initialise()
         self.active_provider_name: str = ""

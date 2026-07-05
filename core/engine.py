@@ -2,6 +2,8 @@
 
 from typing import TYPE_CHECKING
 
+from core.exceptions import ProviderNotSelectedError
+from core.message import Message
 from core.session import Session
 
 if TYPE_CHECKING:
@@ -29,20 +31,30 @@ class AIEngine:
         """
         self.provider = provider
 
-    def ask(self, messages: list[dict[str, str]]) -> "Response":
+    def ask(self, messages: list[Message | dict[str, str]]) -> "Response":
         """Generate a response for the given messages via the active provider.
 
         Args:
             messages: A list of chat messages, each shaped like
-                {"role": "user"|"assistant"|"system", "content": "..."}.
+                ``{"role": ..., "content": ...}`` or a ``Message`` instance.
 
         Returns:
-            The `Response` produced by the active provider.
+            The ``Response`` produced by the active provider.
 
         Raises:
-            Exception: If no provider has been set via `set_provider()`.
+            ProviderNotSelectedError: If no provider has been set via
+                ``set_provider()``.
         """
         if self.provider is None:
-            raise Exception("No Provider Selected")
+            raise ProviderNotSelectedError(
+                "No provider selected. Call set_provider() before ask()."
+            )
 
-        return self.provider.generate(messages)
+        # Normalise Message instances to plain dicts for the provider.
+        raw: list[dict[str, str]] = [
+            {"role": m.role, "content": m.content}
+            if isinstance(m, Message)
+            else m
+            for m in messages
+        ]
+        return self.provider.generate(raw)

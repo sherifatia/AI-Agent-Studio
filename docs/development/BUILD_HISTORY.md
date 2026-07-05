@@ -198,5 +198,43 @@ Full syntax scan and import verification of all new and changed modules.
 
 ---
 
+### Build 014 — Housekeeping (exceptions, settings path, Message dataclass)
+**Date:** 2026-07-06
+**Type:** Cleanup
+
+**Scope:**
+Address three long-standing technical debt items from the Sprint 4 audit:
+replace generic `raise Exception(...)` in engine.py and
+provider_manager.py with dedicated exception types; make
+config/settings.py's file path resolution package-relative instead of
+CWD-relative; wire core/message.py's Message dataclass into AIEngine.ask()
+so it accepts both Message objects and plain dicts.
+
+**Files created:**
+- `core/exceptions.py` — `ProviderNotSelectedError`, `UnknownProviderError`
+
+**Files modified:**
+- `core/engine.py` — uses `ProviderNotSelectedError`, accepts `Message`
+  instances in `ask()` via normalisation to dicts
+- `providers/provider_manager.py` — uses `UnknownProviderError` instead of
+  generic `Exception`
+- `config/settings.py` — path resolved via `Path(__file__).parent` instead
+  of relative to CWD
+
+**Verification performed:**
+Full syntax scan and import verification of all changed modules.
+
+**Follow-ups / known limitations:**
+- `test_engine.py` and `application.py` still catch generic `Exception`
+  around provider calls; they could be updated to catch the specific types
+  in a future Build.
+- The `Message` dataclass now works in the engine but providers still
+  receive plain dicts (normalised by `ask()`). A future Build could type
+  the provider interface to accept `Message` directly.
+
+**Commit:** `Build 014 - Housekeeping (exceptions, settings path, Message)`
+
+---
+
 *(Future Builds: add new entries above this line, using the template
 above.)*

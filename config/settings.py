@@ -1,21 +1,22 @@
 """JSON-backed application settings loader."""
 
 import json
+from pathlib import Path
 from typing import Any
+
+_SETTINGS_PATH: Path = Path(__file__).parent / "settings.json"
 
 
 class Settings:
-    """Loads and exposes key/value settings from `config/settings.json`.
+    """Loads and exposes key/value settings from ``config/settings.json``.
 
-    Note: the settings file path is resolved relative to the process's
-    current working directory, not this module's location — the
-    application must be launched from the repository root. See
-    docs/PROJECT_AUDIT.md section 7.
+    The file path is resolved relative to this module's location, so the
+    application can be launched from any working directory.
     """
 
     def __init__(self) -> None:
         with open(
-            "config/settings.json",
+            _SETTINGS_PATH,
             "r",
             encoding="utf-8"
         ) as f:

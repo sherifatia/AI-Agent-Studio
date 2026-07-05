@@ -2,6 +2,8 @@
 
 from typing import TYPE_CHECKING
 
+from core.exceptions import UnknownProviderError
+
 if TYPE_CHECKING:
     from providers.base_provider import BaseProvider
 
@@ -45,4 +47,7 @@ class ProviderManager:
             from providers.openrouter_provider import OpenRouterProvider
             return OpenRouterProvider()
 
-        raise Exception(f"Unknown provider: {provider_name}")
+        raise UnknownProviderError(
+            f"Unknown provider: '{provider_name}'. "
+            f"Known providers: ollama, openai, gemini, openrouter."
+        )

@@ -64,6 +64,11 @@ Implement `memory/conversation.py` (persistent conversation history,
 likely replacing or backing `core.session.Session`), `memory/embeddings.py`,
 and `memory/vectordb.py` for semantic recall.
 
+**Status:** ✅ Completed across Builds 009, 010, and 020.
+``ConversationMemory``, ``SessionMemory``, ``MemoryManager``,
+``Embeddings`` (sparse frequency vectors), and ``VectorDB`` (in-memory
+cosine-similarity search) are all implemented.
+
 ### Skills System
 Implement `skills/skill.py` (a `Skill` contract, mirroring
 `BaseProvider`'s shape) and `skills/skill_manager.py` (a registry/dispatcher,

@@ -432,3 +432,39 @@ Syntax check and import verification on all seven changed modules.
   the entire workflow.
 
 **Commit:** `Build 019 - Workflows System`
+
+---
+
+### Build 020 — Memory Embeddings & VectorDB
+**Date:** 2026-07-06
+**Type:** Feature
+
+**Scope:**
+Implement the two remaining memory stubs — embedding generation and
+vector database — completing the ``memory/`` package.
+
+- ``memory/embeddings.py`` — ``Embeddings.embed(text)`` produces sparse
+  frequency vectors from word tokens (no external dependencies).  Also
+  provides ``cosine_similarity()`` for comparing vectors.
+- ``memory/vectordb.py`` — ``VectorDB`` stores ``VectorEntry`` objects
+  with sparse vectors and supports ``search(query, top_k, min_score)``
+  using cosine similarity.
+
+**Files created:**
+- ``memory/embeddings.py`` — full implementation
+- ``memory/vectordb.py`` — full implementation
+
+**Verification performed:**
+Syntax check, import verification, and a functional test that inserted
+three documents, searched for ``"sunny day"``, and confirmed the
+most relevant result was returned first (score: 0.354 vs 0.0).
+
+**Follow-ups / known limitations:**
+- Embeddings are bag-of-words frequency vectors — no semantic proximity
+  (e.g. "car" vs "vehicle" score 0.0).  A future Build can replace with
+  ``sentence-transformers`` or an API-based embedding model.
+- VectorDB is entirely in-memory; no persistence across restarts.
+- No integration with ConversationMemory yet — the two stores are
+  independent.
+
+**Commit:** `Build 020 - Memory Embeddings & VectorDB`

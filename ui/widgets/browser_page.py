@@ -1,14 +1,11 @@
 """Browser page — fetch and display web page content.
 
 Provides a simple web-fetching interface: enter a URL, click Fetch,
-and view the page content as plain text.  HTTP requests run in a
-background ``QThread`` to keep the UI responsive.
+and view the page content as clean, readable text.  HTTP requests run
+in a background ``QThread`` to keep the UI responsive.
 """
 
 from __future__ import annotations
-
-import urllib.error
-import urllib.request
 
 from PySide6.QtCore import QThread, Signal
 from PySide6.QtWidgets import (
@@ -22,6 +19,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from browser.browser_manager import BrowserManager
 from core.logging_setup import get_logger
 
 _logger = get_logger(__name__)
@@ -37,22 +35,15 @@ class _FetchWorker(QThread):
         super().__init__()
         self._url = url
         self._timeout = timeout
+        self._browser = BrowserManager()
 
     def run(self) -> None:
-        try:
-            req = urllib.request.Request(
-                self._url,
-                headers={"User-Agent": "AI-Agent-Studio/1.0"},
-            )
-            with urllib.request.urlopen(req, timeout=self._timeout) as resp:
-                content = resp.read().decode("utf-8", errors="replace")
-            self.finished.emit(content)
-        except urllib.error.HTTPError as exc:
-            self.failed.emit(f"HTTP {exc.code}: {exc.reason}")
-        except urllib.error.URLError as exc:
-            self.failed.emit(f"URL error: {exc.reason}")
-        except Exception as exc:
-            self.failed.emit(str(exc))
+        page = self._browser.fetch(self._url, timeout=self._timeout)
+        if page.error:
+            self.failed.emit(page.error)
+        else:
+            output = f"Title: {page.title}\nURL: {page.url}\n\n{page.text}"
+            self.finished.emit(output)
 
 
 class BrowserPage(QWidget):
@@ -79,7 +70,7 @@ class BrowserPage(QWidget):
 
         desc = QLabel(
             "Fetch a web page and view its content as plain text. "
-            "Future builds will add an interactive embedded browser."
+            "You can also use ``/fetch <url>`` in Chat."
         )
         desc.setWordWrap(True)
         root.addWidget(desc)

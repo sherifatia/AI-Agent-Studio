@@ -144,9 +144,10 @@ class Application:
         """Register the built-in demo skills into the skill registry."""
         from skills.builtin.current_time import CurrentTimeSkill
         from skills.builtin.calculator import CalculatorSkill
+        from skills.builtin.web_fetch import WebFetchSkill
 
         loader = SkillLoader(self.skill_registry)
-        loader.load([CurrentTimeSkill(), CalculatorSkill()])
+        loader.load([CurrentTimeSkill(), CalculatorSkill(), WebFetchSkill()])
         _logger.info(
             "Skills loaded: %s",
             [s.name for s in self.skill_registry.all_skills()],

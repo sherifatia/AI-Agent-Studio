@@ -36,6 +36,7 @@ _SKILL_ALIASES: dict[str, str] = {
     "time": "current_time",
     "calc": "calculator",
     "calculate": "calculator",
+    "fetch": "web_fetch",
 }
 
 

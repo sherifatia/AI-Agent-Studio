@@ -97,6 +97,10 @@ Implement `browser/browser_manager.py` to give agents the ability to drive
 a browser instance. Depends on the Runtime and Skills systems being in
 place first, since browser actions are a natural candidate for a "skill."
 
+**Status:** ✅ Completed in Build 022.  ``BrowserManager`` fetches URLs,
+extracts readable text (stdlib HTML parser), and surfaces the content.
+A ``WebFetchSkill`` exposes this to the Agent via ``/fetch <url>``.
+
 ### Housekeeping (lower priority, non-blocking)
 - Reconcile the two theming mechanisms (`styles/*.qss` vs `ui/theme.py`).
 - Replace generic `raise Exception(...)` calls in `core/engine.py` and

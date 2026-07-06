@@ -505,3 +505,46 @@ Syntax check and import verification on all three changed modules.
 - No demo plugins are bundled (plugins are intended for third parties).
 
 **Commit:** `Build 021 - Plugin System`
+
+---
+
+### Build 022 — Embedded Browser
+**Date:** 2026-07-06
+**Type:** Feature
+
+**Scope:**
+Implement the Embedded Browser system, completing the previously empty
+``browser/`` package.
+
+- ``browser/browser_manager.py`` — ``BrowserManager`` that fetches URLs
+  via ``urllib``, extracts page title and readable text (using
+  ``html.parser`` from stdlib), and returns structured ``PageResult``
+  objects.
+- ``skills/builtin/web_fetch.py`` — ``WebFetchSkill`` that wraps
+  ``BrowserManager`` and registers it as a ``/fetch <url>`` Agent
+  command.
+- ``ui/widgets/browser_page.py`` — updated to use ``BrowserManager``
+  instead of inline ``urllib`` code.
+- ``core/agent.py`` — added ``/fetch`` → ``web_fetch`` alias.
+- ``core/application.py`` — registers ``WebFetchSkill`` at startup.
+
+**Files created:**
+- ``browser/browser_manager.py`` — full implementation
+- ``skills/builtin/web_fetch.py`` — full implementation
+
+**Files modified:**
+- ``browser/__init__.py`` — updated docstring
+- ``ui/widgets/browser_page.py`` — uses ``BrowserManager``
+- ``core/agent.py`` — added ``fetch`` alias
+- ``core/application.py`` — registers ``WebFetchSkill``
+
+**Verification performed:**
+Syntax check and import verification on all six changed modules.
+
+**Follow-ups / known limitations:**
+- No JavaScript execution — fetches raw HTML only.
+- Content is limited to the first 2 MB of raw HTML; extracted text
+  shown in the UI is limited to 2000 characters for skill output.
+- No cookie/session management across requests.
+
+**Commit:** `Build 022 - Embedded Browser`

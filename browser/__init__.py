@@ -1,5 +1,6 @@
-"""Reserved package for embedded browser automation.
+"""Browser package — fetch, parse, and browse web content.
 
-Will eventually expose a browser manager that lets agents drive a browser
-instance as part of a skill or workflow. See docs/ROADMAP.md.
+Provides ``BrowserManager`` for URL fetching and HTML-to-text
+extraction, plus a ``WebFetchSkill`` that exposes this capability
+to the Agent via the ``/fetch`` command.
 """

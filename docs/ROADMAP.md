@@ -108,3 +108,11 @@ A ``WebFetchSkill`` exposes this to the Agent via ``/fetch <url>``.
 - Make `config/settings.py`'s file path resolution independent of the
   process's working directory.
 - Adopt `pytest` and convert `test_engine.py` into a real test suite.
+
+**Status:** ✅ Completed in Build 023.  ``styles/dark.qss`` and
+``styles/light.qss`` now contain full QSS stylesheets applied via
+``ui/theme.load_stylesheet()``; ``ui/theme.py`` has separate ``DARK_COLORS``
+and ``LIGHT_COLORS`` dicts.  ``pytest`` is adopted with 21 tests across
+``tests/test_engine.py``, ``tests/test_memory.py``,
+``tests/test_providers.py``, and ``tests/test_workflows.py``.
+The old ``test_engine.py`` has been removed.

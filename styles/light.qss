@@ -1,3 +1,219 @@
-/* Reserved: light theme stylesheet.
-   Not currently loaded by the application; ui/theme.py holds the active
-   color constants instead. See docs/PROJECT_AUDIT.md section 7. */
+/* Light theme for AI Agent Studio.
+ * Applied on top of PySide6 Fusion style.
+ */
+
+QMainWindow {
+    background-color: #FFFFFF;
+}
+
+QWidget {
+    background-color: #FFFFFF;
+    color: #333333;
+    font-family: "Segoe UI", "Arial", sans-serif;
+    font-size: 13px;
+}
+
+/* ── Sidebar ────────────────────────────────────────────── */
+
+#sidebar {
+    background-color: #F3F3F3;
+    border-right: 1px solid #E0E0E0;
+}
+
+#sidebar QPushButton {
+    background-color: transparent;
+    color: #333333;
+    border: none;
+    padding: 10px 16px;
+    text-align: left;
+    font-size: 13px;
+}
+
+#sidebar QPushButton:hover {
+    background-color: #E8E8E8;
+    color: #000000;
+}
+
+#sidebar QPushButton:checked,
+#sidebar QPushButton[selected="true"] {
+    background-color: #E0E0E0;
+    color: #000000;
+    border-left: 3px solid #007ACC;
+}
+
+/* ── Status Bar ─────────────────────────────────────────── */
+
+QStatusBar {
+    background-color: #F3F3F3;
+    color: #666666;
+    border-top: 1px solid #E0E0E0;
+    font-size: 12px;
+}
+
+/* ── Input Fields ───────────────────────────────────────── */
+
+QLineEdit {
+    background-color: #FFFFFF;
+    color: #333333;
+    border: 1px solid #CCCCCC;
+    border-radius: 4px;
+    padding: 6px 10px;
+    selection-background-color: #ADD6FF;
+}
+
+QLineEdit:focus {
+    border-color: #007ACC;
+}
+
+/* ── Text Areas ─────────────────────────────────────────── */
+
+QPlainTextEdit {
+    background-color: #FFFFFF;
+    color: #333333;
+    border: 1px solid #E0E0E0;
+    selection-background-color: #ADD6FF;
+    font-family: "Cascadia Code", "Consolas", monospace;
+    font-size: 13px;
+}
+
+/* ── Buttons ────────────────────────────────────────────── */
+
+QPushButton {
+    background-color: #007ACC;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 16px;
+    font-size: 13px;
+}
+
+QPushButton:hover {
+    background-color: #1A8AD4;
+}
+
+QPushButton:pressed {
+    background-color: #005A9E;
+}
+
+QPushButton:disabled {
+    background-color: #CCCCCC;
+    color: #999999;
+}
+
+/* ── Combo Boxes ────────────────────────────────────────── */
+
+QComboBox {
+    background-color: #FFFFFF;
+    color: #333333;
+    border: 1px solid #CCCCCC;
+    border-radius: 4px;
+    padding: 4px 8px;
+}
+
+QComboBox:focus {
+    border-color: #007ACC;
+}
+
+QComboBox::drop-down {
+    border: none;
+    width: 24px;
+}
+
+QComboBox QAbstractItemView {
+    background-color: #FFFFFF;
+    color: #333333;
+    selection-background-color: #ADD6FF;
+    border: 1px solid #E0E0E0;
+}
+
+/* ── Labels ─────────────────────────────────────────────── */
+
+QLabel {
+    color: #333333;
+    background-color: transparent;
+}
+
+/* ── Scroll Bars ────────────────────────────────────────── */
+
+QScrollBar:vertical {
+    background-color: #F3F3F3;
+    width: 10px;
+    border: none;
+}
+
+QScrollBar::handle:vertical {
+    background-color: #C0C0C0;
+    border-radius: 5px;
+    min-height: 30px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background-color: #A0A0A0;
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+    height: 0;
+}
+
+/* ── List / Tree / Table ───────────────────────────────── */
+
+QListWidget,
+QTreeWidget,
+QTableWidget {
+    background-color: #FFFFFF;
+    color: #333333;
+    border: 1px solid #E0E0E0;
+    outline: none;
+}
+
+QListWidget::item:selected,
+QTreeWidget::item:selected,
+QTableWidget::item:selected {
+    background-color: #ADD6FF;
+    color: #000000;
+}
+
+/* ── Group Box ──────────────────────────────────────────── */
+
+QGroupBox {
+    border: 1px solid #E0E0E0;
+    border-radius: 4px;
+    margin-top: 12px;
+    padding-top: 16px;
+    font-weight: bold;
+    color: #333333;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 12px;
+    padding: 0 4px;
+}
+
+/* ── Tab Widget ─────────────────────────────────────────── */
+
+QTabWidget::pane {
+    border: 1px solid #E0E0E0;
+    background-color: #FFFFFF;
+}
+
+QTabBar::tab {
+    background-color: #F3F3F3;
+    color: #666666;
+    padding: 6px 16px;
+    border: 1px solid #E0E0E0;
+    border-bottom: none;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+QTabBar::tab:selected {
+    background-color: #FFFFFF;
+    color: #000000;
+}
+
+QTabBar::tab:hover:!selected {
+    background-color: #E8E8E8;
+    color: #333333;
+}

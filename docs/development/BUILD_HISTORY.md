@@ -548,3 +548,59 @@ Syntax check and import verification on all six changed modules.
 - No cookie/session management across requests.
 
 **Commit:** `Build 022 - Embedded Browser`
+
+---
+
+### Build 023 — Housekeeping
+**Date:** 2026-07-06
+**Type:** Infrastructure / Cleanup
+
+**Scope:**
+Complete the housekeeping items from ROADMAP.md:
+
+1. **Theming reconciliation** — ``styles/dark.qss`` and ``styles/light.qss``
+   were empty placeholders; both now contain full QSS stylesheets covering
+   the main window, sidebar, status bar, input fields, text areas, buttons,
+   combo boxes, labels, scroll bars, list/tree/table widgets, group boxes,
+   and tab widgets.  ``ui/theme.py`` now defines both ``DARK_COLORS`` and
+   ``LIGHT_COLORS`` dicts and ``load_stylesheet()`` properly reads the
+   QSS file at runtime.
+2. **Generic ``raise Exception``** — already resolved in Build 014 (uses
+   ``ProviderNotSelectedError`` and ``UnknownProviderError``).
+3. **Path-independent settings** — already resolved in Build 014 (uses
+   ``Path(__file__).parent``).
+4. **pytest adoption** — ``tests/`` directory created with 21 tests across
+   four modules: ``test_engine.py`` (3), ``test_memory.py`` (7),
+   ``test_providers.py`` (7), ``test_workflows.py`` (3).  The old
+   ``test_engine.py`` smoke-test script has been removed.
+5. **Build number bump** — ``core/app_info.py`` → ``BUILD_NUMBER = "023.0"``
+
+**Files created:**
+- ``tests/__init__.py``
+- ``tests/test_engine.py``
+- ``tests/test_memory.py``
+- ``tests/test_providers.py``
+- ``tests/test_workflows.py``
+
+**Files modified:**
+- ``styles/dark.qss`` — full dark theme stylesheet
+- ``styles/light.qss`` — full light theme stylesheet
+- ``ui/theme.py`` — ``DARK_COLORS``/``LIGHT_COLORS``, improved ``load_stylesheet``
+- ``core/app_info.py`` — BUILD_NUMBER bump
+
+**Files removed:**
+- ``test_engine.py`` — replaced by ``tests/test_engine.py``
+
+**Verification performed:**
+- Syntax check on all modified/created Python files
+- ``pytest tests/ -v`` — 21 passed, 0 failed
+
+**Follow-ups / known limitations:**
+- QSS stylesheets are loaded by ``MainWindow`` but some inline styles in
+  individual widgets may override them; a full visual audit is recommended.
+- ``settings_page.py`` still applies inline ``_input_style()`` overrides
+  that may conflict with the QSS stylesheet.
+- The old ``test_engine.py`` was a standalone smoke test; its removal means
+  the project no longer has a quick "just run this file" smoke test.
+
+**Commit:** `Build 023 - Housekeeping`

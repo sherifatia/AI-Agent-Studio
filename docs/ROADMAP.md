@@ -88,6 +88,10 @@ Implement `plugins/plugin_manager.py` as a loader for third-party
 extensions, once the Skills and Workflow systems have stable contracts to
 extend.
 
+**Status:** ✅ Completed in Build 021.  ``BasePlugin`` (ABC with
+``on_activate`` / ``on_deactivate`` hooks) and ``PluginManager``
+(directory discovery, registration, lifecycle) are implemented.
+
 ### Embedded Browser
 Implement `browser/browser_manager.py` to give agents the ability to drive
 a browser instance. Depends on the Runtime and Skills systems being in

@@ -468,3 +468,40 @@ most relevant result was returned first (score: 0.354 vs 0.0).
   independent.
 
 **Commit:** `Build 020 - Memory Embeddings & VectorDB`
+
+---
+
+### Build 021 — Plugin System
+**Date:** 2026-07-06
+**Type:** Feature
+
+**Scope:**
+Implement the Plugin system, completing the previously empty ``plugins/``
+package.
+
+- ``plugins/plugin_base.py`` — ``BasePlugin`` ABC with ``name``,
+  ``version``, ``description`` metadata and ``on_activate(context)`` /
+  ``on_deactivate(context)`` lifecycle hooks.
+- ``plugins/plugin_manager.py`` — ``PluginManager`` that discovers
+  plugins from a directory (``.py`` files containing concrete
+  ``BasePlugin`` subclasses), supports manual registration, and manages
+  the activate/deactivate lifecycle for all plugins.
+
+**Files created:**
+- ``plugins/plugin_base.py`` — full implementation
+- ``plugins/plugin_manager.py`` — full rewrite
+
+**Files modified:**
+- ``plugins/__init__.py`` — updated docstring
+
+**Verification performed:**
+Syntax check and import verification on all three changed modules.
+
+**Follow-ups / known limitations:**
+- Plugin discovery is directory-based only (no package/zip support yet).
+- No plugin isolation — plugins run in the main process and can import
+  anything.
+- No built-in plugin registry in the UI yet (no "Plugins" page).
+- No demo plugins are bundled (plugins are intended for third parties).
+
+**Commit:** `Build 021 - Plugin System`

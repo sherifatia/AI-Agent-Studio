@@ -1,6 +1,6 @@
-"""Reserved package for third-party plugin loading.
+"""Plugins package — third-party extension system.
 
-Will eventually expose a plugin manager for discovering and loading
-extensions once the Skills and Workflow systems have stable contracts.
-See docs/ROADMAP.md.
+Provides ``BasePlugin`` (the contract every plugin must implement) and
+``PluginManager`` (discovery, loading, and lifecycle management).
+Plugins can register skills, workflows, or providers.
 """

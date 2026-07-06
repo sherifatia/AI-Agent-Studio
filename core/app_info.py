@@ -23,7 +23,7 @@ class AppInfo:
 
     NAME: str = "AI Agent Studio"
     VERSION: str = "0.1.0"
-    BUILD_NUMBER: str = "023.0"
+    BUILD_NUMBER: str = "024.0"
     AUTHOR: str = "Sherif Atia"
     REPOSITORY: str = "https://github.com/sherifatia/AI-Agent-Studio"
 

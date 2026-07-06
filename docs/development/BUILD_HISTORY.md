@@ -604,3 +604,30 @@ Complete the housekeeping items from ROADMAP.md:
   the project no longer has a quick "just run this file" smoke test.
 
 **Commit:** `Build 023 - Housekeeping`
+
+---
+
+### Build 024 — Project Finalization
+**Date:** 2026-07-06
+**Type:** Documentation / Cleanup
+
+**Scope:**
+Final build of the sprint — bring the project's documentation and metadata
+in line with the current state of the codebase.
+
+- **README.md fully rewritten** — now reflects all eight implemented
+  packages (providers, UI pages, workflows, memory, plugins, browser, skills),
+  updated provider table, built-in skill reference, pytest instructions,
+  and current architecture.
+- **Build number bump** — `core/app_info.py` → `BUILD_NUMBER = "024.0"`.
+
+**Files modified:**
+- `README.md` — comprehensive rewrite to match current codebase
+- `core/app_info.py` — BUILD_NUMBER bump
+
+**Verification performed:**
+- Syntax check on modified Python files
+- Full test suite: `python -m pytest tests/ -v` — 21 passed, 0 failed
+- Import check: all key modules import cleanly
+
+**Commit:** `Build 024 - Project Finalization`

@@ -31,9 +31,17 @@ _PROVIDERS: list[str] = ["ollama", "openai", "gemini", "openrouter"]
 # Maps internal name to readable label.
 _PROVIDER_LABELS: dict[str, str] = {
     "ollama":      "Ollama  (local)",
-    "openai":      "OpenAI  (TODO)",
-    "gemini":      "Gemini  (TODO)",
-    "openrouter":  "OpenRouter  (TODO)",
+    "openai":      "OpenAI  (API key required)",
+    "gemini":      "Gemini  (API key required)",
+    "openrouter":  "OpenRouter  (API key required)",
+}
+
+# Environment variable hints per provider.
+_ENV_HINTS: dict[str, str] = {
+    "ollama":      "",
+    "openai":      "Set OPENAI_API_KEY",
+    "gemini":      "Set GEMINI_API_KEY",
+    "openrouter":  "Set OPENROUTER_API_KEY",
 }
 
 
@@ -83,7 +91,7 @@ class ModelsPage(QWidget):
         layout.addWidget(self._current_provider_label)
 
         self._provider_list = QListWidget()
-        self._provider_list.setMaximumHeight(160)
+        self._provider_list.setMaximumHeight(200)
         for name in _PROVIDERS:
             item = QListWidgetItem(_PROVIDER_LABELS[name])
             item.setData(256, name)
@@ -160,7 +168,7 @@ class ModelsPage(QWidget):
 
         except NotImplementedError:
             self._set_status(
-                f"{name} is a TODO provider and cannot be activated yet.",
+                f"{name} is not fully implemented yet.",
                 ok=False,
             )
             _logger.warning("Cannot activate TODO provider: %s", name)
@@ -183,8 +191,21 @@ class ModelsPage(QWidget):
                 self._set_status("Ollama: Connected", ok=True)
                 _logger.info("Ollama connection test: OK")
             else:
-                # Non-Ollama providers raise NotImplementedError from generate().
-                provider.generate([])
+                # Other providers: try a minimal generate call.
+                result = provider.generate(
+                    [{"role": "user", "content": "test"}]
+                )
+                if result.success:
+                    self._set_status("Connected — response received", ok=True)
+                else:
+                    hint = _ENV_HINTS.get(
+                        type(provider).__name__
+                        .replace("Provider", "")
+                        .lower(),
+                        "",
+                    )
+                    msg = f"Connection failed. {hint}" if hint else "Connection failed."
+                    self._set_status(msg, ok=False)
 
         except NotImplementedError:
             self._set_status("Provider not implemented yet.", ok=False)
@@ -215,7 +236,7 @@ class ModelsPage(QWidget):
 
         # Fallback for any other active provider type.
         type_name = type(provider).__name__.replace("Provider", "").lower()
-        self._current_provider_label.setText(f"Active: {type_name}")
+        self._current_provider_label.setText(f"Active: {_PROVIDER_LABELS.get(type_name, type_name)}")
         self._highlight_active_provider(type_name)
         self._load_models_for(type_name)
 
@@ -230,12 +251,15 @@ class ModelsPage(QWidget):
         """
         self._model_list.clear()
 
-        if provider_name != "ollama":
+        if provider_name == "ollama":
+            self._load_ollama_models()
+        else:
             self._models_info_label.setText(
                 f"Model listing is not available for {provider_name}."
             )
-            return
 
+    def _load_ollama_models(self) -> None:
+        """Query and display Ollama's locally installed models."""
         provider = getattr(self._engine, "provider", None)
 
         try:
@@ -243,12 +267,9 @@ class ModelsPage(QWidget):
             if isinstance(provider, OllamaProvider):
                 result = provider.client.list()
             else:
-                # Provider not yet active — use a temporary client to list.
                 from ollama import Client
                 result = Client(host="http://localhost:11434").list()
 
-            # Handle both object-style and dict-style responses depending
-            # on the installed version of the ollama Python library.
             if hasattr(result, "models"):
                 models = [
                     getattr(m, "model", None) or getattr(m, "name", str(m))
@@ -267,7 +288,7 @@ class ModelsPage(QWidget):
                     f"{len(models)} model(s) installed:"
                 )
             else:
-                self._models_info_label.setText(
+                self._models_info_info_label.setText(
                     "No models installed. Run: ollama pull <model>"
                 )
 

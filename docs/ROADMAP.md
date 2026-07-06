@@ -51,6 +51,11 @@ against `BaseProvider`, following the pattern established by
 `providers/openai_provider.py`, `providers/gemini_provider.py`, and
 `providers/openrouter_provider.py`.
 
+**Status:** ✅ Completed in Build 017.  Each provider uses the standard
+library ``urllib`` module to avoid adding a third-party dependency; API
+keys are read from environment variables (``OPENAI_API_KEY``,
+``GEMINI_API_KEY``, ``OPENROUTER_API_KEY``).
+
 ### Memory
 Implement `memory/conversation.py` (persistent conversation history,
 likely replacing or backing `core.session.Session`), `memory/embeddings.py`,

@@ -50,6 +50,7 @@ class Application:
         # Convenience properties populated by initialise()
         self.active_provider_name: str = ""
         self.active_model: str = ""
+        self.active_host: str = ""
 
     # ------------------------------------------------------------------
     # Initialisation
@@ -82,6 +83,7 @@ class Application:
             self.settings = Settings()
             self.active_provider_name = self.settings.get("provider") or "ollama"
             self.active_model = self.settings.get("model") or ""
+            self.active_host = self.settings.get("host") or ""
         except Exception:
             _logger.warning(
                 "Could not read config/settings.json — using defaults",
@@ -89,6 +91,7 @@ class Application:
             )
             self.active_provider_name = "ollama"
             self.active_model = ""
+            self.active_host = ""
 
     def _start_engine(self) -> None:
         """Wire the engine to the provider named in settings.
@@ -97,7 +100,11 @@ class Application:
         in ``__init__`` and must survive the lifetime of the application.
         """
         try:
-            provider = self.provider_manager.create(self.active_provider_name)
+            provider = self.provider_manager.create(
+                self.active_provider_name,
+                model=self.active_model,
+                host=self.active_host,
+            )
             self.engine.set_provider(provider)
             _logger.info(
                 "Engine wired to provider: %s", self.active_provider_name

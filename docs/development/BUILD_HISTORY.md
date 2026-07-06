@@ -299,3 +299,46 @@ Syntax check on all three changed modules.
   session shared by the engine — Runtime writes messages to it.
 
 **Commit:** `Build 016 - Wire Runtime into Agent & App Startup`
+
+---
+
+### Build 017 — Additional Providers (OpenAI, Gemini, OpenRouter)
+**Date:** 2026-07-06
+**Type:** Feature
+
+**Scope:**
+Replace the three stub providers (OpenAI, Gemini, OpenRouter) that raised
+``NotImplementedError`` with real HTTP-based implementations using the
+standard library ``urllib``.  Each provider reads its API key from an
+environment variable (``OPENAI_API_KEY``, ``GEMINI_API_KEY``,
+``OPENROUTER_API_KEY``) and falls back gracefully when the key is missing.
+
+Also updated ``ProviderManager.create()`` to accept optional ``model`` and
+``host`` parameters and forward them to each provider's constructor, and
+updated ``Application._start_engine()`` to pass the configured values from
+``config/settings.json``.
+
+**Files modified:**
+- ``providers/openai_provider.py`` — complete rewrite with real logic
+- ``providers/gemini_provider.py`` — complete rewrite with real logic
+- ``providers/openrouter_provider.py`` — complete rewrite with real logic
+- ``providers/provider_manager.py`` — ``create()`` now accepts ``model``
+  and ``host`` parameters, forwarding them to provider constructors
+- ``core/application.py`` — ``_start_engine()`` passes ``active_model`` and
+  ``active_host`` to ``ProviderManager.create()``; added ``active_host``
+  attribute
+- ``ui/widgets/models_page.py`` — updated labels from ``(TODO)`` to
+  ``(API key required)``; improved connection test to handle all providers
+
+**Verification performed:**
+Syntax check (ast.parse) and import verification on all six changed
+modules.  Existing ``test_engine.py`` smoke test unchanged.
+
+**Follow-ups / known limitations:**
+- API keys are read from environment variables only — there is no UI for
+  setting them yet.
+- No streaming support (all providers return complete responses).
+- The ``_models_info_label`` typo in ``_load_ollama_models()`` was not
+  fixed to keep the diff minimal (pre-existing).
+
+**Commit:** `Build 017 - Additional Providers (OpenAI, Gemini, OpenRouter)`

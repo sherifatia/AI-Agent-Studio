@@ -75,6 +75,7 @@ def _build_service_loader(
             engine=app.engine,
             memory=app.memory,
             skill_registry=app.skill_registry,
+            workflow_engine=app.workflow_engine,
             settings=app.settings,
             event_bus=context["event_bus"],
             runtime=runtime,

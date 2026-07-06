@@ -386,3 +386,49 @@ modules.
   (Build 019+).
 
 **Commit:** `Build 018 - UI Pages (Browser, Memory, Workflow)`
+
+---
+
+### Build 019 — Workflows System
+**Date:** 2026-07-06
+**Type:** Feature
+
+**Scope:**
+Implement the Workflows system, completing the previously empty
+``workflows/`` package:
+
+- ``workflows/workflow.py`` — ``Workflow`` model, ``Step`` ABC, concrete
+  step types (``SkillStep``, ``PromptStep``), and ``StepResult``.
+- ``workflows/engine.py`` — ``WorkflowEngine`` with registration,
+  lookup, and synchronous execution that passes context between steps.
+- ``core/application.py`` — creates a shared ``WorkflowEngine`` instance,
+  registers two demo workflows (``time_info`` and
+  ``calculate_and_explain``) at startup, and wires it into the UI.
+- ``ui/widgets/workflow_page.py`` — now reads from the actual
+  ``WorkflowEngine`` instead of showing a placeholder.
+- ``ui/main_window.py`` — accepts ``workflow_engine`` parameter and
+  passes it to ``WorkflowPage``.
+
+**Files created:**
+- ``workflows/workflow.py`` — full implementation
+- ``workflows/engine.py`` — full implementation
+
+**Files modified:**
+- ``workflows/__init__.py`` — updated docstring
+- ``core/application.py`` — added ``workflow_engine`` attribute and
+  ``_load_workflows()``
+- ``ui/widgets/workflow_page.py`` — uses shared ``WorkflowEngine``
+- ``ui/main_window.py`` — accepts and forwards ``workflow_engine``
+- ``app.py`` — passes ``workflow_engine`` to ``MainWindow``
+
+**Verification performed:**
+Syntax check and import verification on all seven changed modules.
+
+**Follow-ups / known limitations:**
+- Workflows are executed synchronously in-process; no persistence.
+- WorkflowPage is read-only — no UI for creating or editing workflows
+  yet.
+- No step branching or error-recovery logic; a single failure aborts
+  the entire workflow.
+
+**Commit:** `Build 019 - Workflows System`

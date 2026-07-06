@@ -1,8 +1,7 @@
 """Workflows page — view and manage multi-step agent workflows.
 
-Displays registered workflow definitions and their steps.  The workflows
-package is still under development (see ``docs/ROADMAP.md``); this page
-shows a useful placeholder with information about the planned feature.
+Displays registered workflow definitions and their steps.  Reads from
+the ``WorkflowEngine`` to show available workflows and their metadata.
 """
 
 from __future__ import annotations
@@ -19,6 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.logging_setup import get_logger
+from workflows.engine import WorkflowEngine
 
 _logger = get_logger(__name__)
 
@@ -26,17 +26,21 @@ _logger = get_logger(__name__)
 class WorkflowPage(QWidget):
     """Workflow management page.
 
-    Currently shows registered workflows (if any exist) and a description
-    of the planned automation system.  Will be expanded in a future Build
-    to support editing, composing, and running workflows.
+    Shows registered workflows from the ``WorkflowEngine``.  Will be
+    expanded in a future Build to support editing, composing, and
+    running workflows.
 
     Args:
         engine: Unused — reserved for future workflow execution.
     """
 
-    def __init__(self, engine: object = None) -> None:
+    def __init__(
+        self, engine: object = None,
+        workflow_engine: object = None,
+    ) -> None:
         super().__init__()
         self._engine = engine
+        self._wf_engine = workflow_engine or WorkflowEngine()
         self._build_ui()
         self._refresh()
 
@@ -51,9 +55,8 @@ class WorkflowPage(QWidget):
 
         desc = QLabel(
             "Workflows let you compose multiple skills and provider calls "
-            "into a single automated sequence.  This feature is under "
-            "active development — registered workflows appear below once "
-            "they exist."
+            "into a single automated sequence.  Each workflow runs its "
+            "steps in order, passing the output of each step to the next."
         )
         desc.setWordWrap(True)
         root.addWidget(desc)
@@ -74,26 +77,29 @@ class WorkflowPage(QWidget):
         root.addWidget(box, stretch=1)
 
     def _refresh(self) -> None:
-        """Load workflow definitions from the ``workflows`` package."""
+        """Load workflow definitions from the ``WorkflowEngine``."""
         self._workflow_list.clear()
 
-        try:
-            from workflows.engine import WorkflowEngine
-            engine = WorkflowEngine()
-            workflows = engine.list_workflows()
-        except (ImportError, AttributeError):
-            self._status.setText("Workflow engine not yet available.")
-            return
+        workflows = self._wf_engine.list_workflows()
 
         if workflows:
             for wf in workflows:
-                item = QListWidgetItem(f"{wf.name} — {wf.description}")
+                step_count = len(wf.steps)
+                item_text = (
+                    f"<b>{wf.name}</b> — {wf.description} "
+                    f"({step_count} step{'s' if step_count != 1 else ''})"
+                )
+                item = QListWidgetItem(item_text)
                 self._workflow_list.addItem(item)
-            self._status.setText(f"{len(workflows)} workflow(s) registered.")
-            _logger.debug("WorkflowPage: %d workflow(s)", len(workflows))
+            self._status.setText(
+                f"{len(workflows)} workflow(s) registered."
+            )
+            _logger.debug(
+                "WorkflowPage: %d workflow(s)", len(workflows)
+            )
         else:
             self._workflow_list.addItem(
                 "No workflows registered yet. "
-                "Workflows will appear here once the system is implemented."
+                "Workflows will appear here once defined."
             )
             self._status.setText("No workflows registered.")

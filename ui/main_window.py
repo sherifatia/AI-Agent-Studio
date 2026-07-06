@@ -45,6 +45,7 @@ class MainWindow(QMainWindow):
         engine: object = None,
         memory: object = None,
         skill_registry: object = None,
+        workflow_engine: object = None,
         settings: object = None,
         event_bus: EventBus | None = None,
         runtime: object = None,
@@ -67,6 +68,7 @@ class MainWindow(QMainWindow):
         self._engine = engine
         self._memory = memory
         self._skill_registry = skill_registry
+        self._workflow_engine = workflow_engine
         self._settings = settings
         self._runtime = runtime
         self.event_bus = event_bus or EventBus()
@@ -150,7 +152,9 @@ class MainWindow(QMainWindow):
 
         # Workflow page — workflow list and management.
         from ui.widgets.workflow_page import WorkflowPage
-        self._workflow_page = WorkflowPage(engine=self._engine)
+        self._workflow_page = WorkflowPage(
+            workflow_engine=self._workflow_engine
+        )
         self._stack.addWidget(self._workflow_page)
 
         # Fallback placeholder for any unrecognised page labels.

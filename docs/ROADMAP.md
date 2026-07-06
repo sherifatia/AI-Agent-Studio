@@ -73,6 +73,11 @@ mirroring `ProviderManager`).
 Implement `workflows/` on top of the Skills system once it exists, to allow
 composing multiple skills/providers into a single automation.
 
+**Status:** ✅ Completed in Build 019.  ``Workflow``, ``Step``,
+``SkillStep``, ``PromptStep``, and ``WorkflowEngine`` are all implemented.
+Two demo workflows (``time_info`` and ``calculate_and_explain``) are
+registered at startup.
+
 ### Plugins
 Implement `plugins/plugin_manager.py` as a loader for third-party
 extensions, once the Skills and Workflow systems have stable contracts to

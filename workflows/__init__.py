@@ -1,5 +1,6 @@
-"""Reserved package for multi-step agent workflows.
+"""Workflows package — multi-step agent workflow automation.
 
-Will eventually allow composing skills and providers into automations
-once the Skills system exists. See docs/ROADMAP.md.
+Allows composing skills and provider calls into a single, ordered
+automation.  Each ``Workflow`` is a named sequence of ``Step`` objects;
+a ``WorkflowEngine`` registers and executes them.
 """

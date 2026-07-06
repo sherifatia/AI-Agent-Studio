@@ -20,6 +20,8 @@ from core.session import Session
 from memory.manager import MemoryManager
 from providers.provider_manager import ProviderManager
 from skills.skill_manager import SkillLoader, SkillRegistry
+from workflows.engine import WorkflowEngine
+from workflows.workflow import PromptStep, SkillStep, Workflow
 
 _logger = get_logger(__name__)
 
@@ -46,6 +48,7 @@ class Application:
         self.engine: AIEngine = AIEngine()
         self.memory: MemoryManager = MemoryManager()
         self.skill_registry: SkillRegistry = SkillRegistry()
+        self.workflow_engine: WorkflowEngine = WorkflowEngine()
 
         # Convenience properties populated by initialise()
         self.active_provider_name: str = ""
@@ -72,6 +75,7 @@ class Application:
         self._load_settings()
         self._start_engine()
         self._load_skills()
+        self._load_workflows()
         _logger.info(
             "Application initialised — provider: %s, model: %s",
             self.active_provider_name,
@@ -146,4 +150,50 @@ class Application:
         _logger.info(
             "Skills loaded: %s",
             [s.name for s in self.skill_registry.all_skills()],
+        )
+
+    def _load_workflows(self) -> None:
+        """Register built-in demo workflows."""
+        from skills.builtin.current_time import CurrentTimeSkill
+        from skills.builtin.calculator import CalculatorSkill
+
+        if not self.skill_registry.has("current_time"):
+            self.skill_registry.register(CurrentTimeSkill())
+        if not self.skill_registry.has("calculator"):
+            self.skill_registry.register(CalculatorSkill())
+
+        time_wf = Workflow(
+            name="time_info",
+            description="Get the current time and format it",
+            steps=[
+                SkillStep(skill_name="current_time"),
+                PromptStep(
+                    prompt_template=(
+                        "The current time is: {previous_output}. "
+                        "Write a friendly sentence telling the user what "
+                        "time it is."
+                    )
+                ),
+            ],
+        )
+
+        calc_wf = Workflow(
+            name="calculate_and_explain",
+            description="Calculate a result and explain it",
+            steps=[
+                SkillStep(skill_name="calculator", input_template="{input}"),
+                PromptStep(
+                    prompt_template=(
+                        "The calculation result is: {previous_output}. "
+                        "Explain what this means in simple terms."
+                    )
+                ),
+            ],
+        )
+
+        self.workflow_engine.register(time_wf)
+        self.workflow_engine.register(calc_wf)
+        _logger.info(
+            "Workflows loaded: %s",
+            [w.name for w in self.workflow_engine.list_workflows()],
         )

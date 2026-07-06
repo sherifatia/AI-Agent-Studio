@@ -342,3 +342,47 @@ modules.  Existing ``test_engine.py`` smoke test unchanged.
   fixed to keep the diff minimal (pre-existing).
 
 **Commit:** `Build 017 - Additional Providers (OpenAI, Gemini, OpenRouter)`
+
+---
+
+### Build 018 — UI Pages (Browser, Memory, Workflow)
+**Date:** 2026-07-06
+**Type:** Feature
+
+**Scope:**
+Replace the three remaining placeholder page stubs with real
+implementations:
+
+- **BrowserPage** — URL input and plain-text content fetcher using
+  ``urllib`` in a background ``QThread`` to keep the UI responsive.
+- **MemoryPage** — displays conversation history (from
+  ``ConversationMemory``) alongside session statistics (from
+  ``SessionMemory``).
+- **WorkflowPage** — lists registered workflows (currently empty; shows
+  a descriptive placeholder).  Ready for the future Workflows system.
+
+Also updated ``MainWindow`` to wire all three new pages into the
+``QStackedWidget`` and ``_PAGE_WIDGETS`` lookup, replacing the
+single fallback placeholder that previously served all three.
+
+**Files created:**
+- ``ui/widgets/browser_page.py`` — full implementation
+- ``ui/widgets/memory_page.py`` — full implementation
+- ``ui/widgets/workflow_page.py`` — full implementation
+
+**Files modified:**
+- ``ui/main_window.py`` — adds BrowserPage, MemoryPage, WorkflowPage
+  instances at indices 5‑7; updates ``_PAGE_WIDGETS`` map to include
+  ``browser``, ``memory``, and ``workflows`` entries
+
+**Verification performed:**
+Syntax check (ast.parse) and import verification on all four changed
+modules.
+
+**Follow-ups / known limitations:**
+- BrowserPage shows raw text only — no HTML rendering, no JavaScript.
+- MemoryPage displays all entries; no search/filter yet.
+- WorkflowPage shows an empty list until the Workflows system is built
+  (Build 019+).
+
+**Commit:** `Build 018 - UI Pages (Browser, Memory, Workflow)`

@@ -44,6 +44,9 @@ plus `statusbar.py` and `workspace.py` for shared chrome. Wire
 `MainWindow.change_page()` to actually swap these widgets instead of only
 updating a title label.
 
+**Status:** ✅ Completed across Builds 013, 015, 016, and 018.  All eight
+pages are now implemented and wired into ``MainWindow``.
+
 ### Additional Providers
 Implement `OpenAIProvider`, `GeminiProvider`, and `OpenRouterProvider`
 against `BaseProvider`, following the pattern established by

@@ -32,8 +32,8 @@ class MainWindow(QMainWindow):
     """Top-level window: sidebar navigation + workspace area.
 
     Routes sidebar navigation signals to the correct workspace page.
-    Pages that have a real implementation are shown via a QStackedWidget;
-    pages that are not yet implemented show a placeholder label.
+    All eight pages are now implemented and shown via a QStackedWidget.
+    A fallback placeholder still exists for any unregistered page labels.
 
     MainWindow does not read config/settings.json or construct QSettings
     directly. Both are external concerns passed in by the caller.
@@ -100,7 +100,7 @@ class MainWindow(QMainWindow):
         self.sidebar = Sidebar()
         root.addWidget(self.sidebar)
 
-        # Stacked workspace — one widget per implemented page.
+        # Stacked workspace — one widget per page.
         self._stack = QStackedWidget()
         root.addWidget(self._stack)
 
@@ -108,38 +108,52 @@ class MainWindow(QMainWindow):
         self.status_bar = StatusBar()
         self.setStatusBar(self.status_bar)
 
-        # Index 0: Chat page — Agent wraps the engine; page never touches engine directly.
+        # Chat page — Agent wraps the engine; page never touches engine directly.
         from core.agent import Agent
         from ui.widgets.chat_page import ChatPage
         self._agent = Agent(engine=self._engine, memory=self._memory, skill_registry=self._skill_registry, runtime=self._runtime)
         self._chat_page = ChatPage(agent=self._agent)
         self._stack.addWidget(self._chat_page)
 
-        # Index 1: Models page — wired to the engine.
+        # Models page — wired to the engine.
         from ui.widgets.models_page import ModelsPage
         self._models_page = ModelsPage(engine=self._engine)
         self._models_page.provider_changed.connect(self.status_bar.set_provider)
         self._stack.addWidget(self._models_page)
 
-        # Index 2: Skills page — shows registered skills.
+        # Skills page — shows registered skills.
         from ui.widgets.skills_page import SkillsPage
         self._skills_page = SkillsPage(skill_registry=self._skill_registry)
         self._stack.addWidget(self._skills_page)
 
-        # Index 3: Dashboard page — session stats.
+        # Dashboard page — session stats.
         from ui.widgets.dashboard_page import DashboardPage
         self._dashboard_page = DashboardPage(
             memory=self._memory, engine=self._engine
         )
         self._stack.addWidget(self._dashboard_page)
 
-        # Index 4: Settings page — read-only config view.
+        # Settings page — read-only config view.
         from ui.widgets.settings_page import SettingsPage
         self._settings_page = SettingsPage(settings=self._settings)
         self._stack.addWidget(self._settings_page)
 
-        # Index 5: placeholder widget for pages not yet implemented
-        # (Browser, Memory, Workflow).
+        # Browser page — web fetcher.
+        from ui.widgets.browser_page import BrowserPage
+        self._browser_page = BrowserPage(engine=self._engine)
+        self._stack.addWidget(self._browser_page)
+
+        # Memory page — conversation history and stats.
+        from ui.widgets.memory_page import MemoryPage
+        self._memory_page = MemoryPage(memory=self._memory)
+        self._stack.addWidget(self._memory_page)
+
+        # Workflow page — workflow list and management.
+        from ui.widgets.workflow_page import WorkflowPage
+        self._workflow_page = WorkflowPage(engine=self._engine)
+        self._stack.addWidget(self._workflow_page)
+
+        # Fallback placeholder for any unrecognised page labels.
         self._placeholder = QWidget()
         ph_layout = QVBoxLayout(self._placeholder)
         self.page_title = QLabel("")
@@ -169,6 +183,9 @@ class MainWindow(QMainWindow):
         PageId.SKILLS.value:   "_skills_page",
         PageId.DASHBOARD.value: "_dashboard_page",
         PageId.SETTINGS.value: "_settings_page",
+        PageId.BROWSER.value:  "_browser_page",
+        PageId.MEMORY.value:   "_memory_page",
+        PageId.WORKFLOWS.value: "_workflow_page",
     }
 
     def _on_page_changed(self, page_label: str) -> None:
